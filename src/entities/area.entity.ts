@@ -47,6 +47,6 @@ export class Area {
   @JoinColumn({ name: 'locationId' })
   location: Location;
 
-  @OneToMany(() => Table, (table) => table.area)
+  @OneToMany(() => Table, (table) => table.areaRelation)
   tables: Table[];
 }

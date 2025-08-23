@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS `cliente_petiscaria_order_items`;
 CREATE TABLE `cliente_petiscaria_order_items` (
   `id` varchar(36) NOT NULL,
   `productName` varchar(255) NOT NULL,
@@ -10,9 +11,13 @@ CREATE TABLE `cliente_petiscaria_order_items` (
   `notes` varchar(255) DEFAULT NULL,
   `specialInstructions` varchar(50) DEFAULT NULL,
   `isReady` boolean NOT NULL DEFAULT false,
+  `status` varchar(50) NOT NULL DEFAULT 'pending',
+  `startTime` timestamp NULL DEFAULT NULL,
   `readyTime` timestamp NULL DEFAULT NULL,
+  `endTime` timestamp NULL DEFAULT NULL,
   `deliveredTime` timestamp NULL DEFAULT NULL,
   `preparationTime` int NOT NULL DEFAULT '0',
+  `sentToKitchenAt` timestamp NULL DEFAULT NULL,
   `modifications` json DEFAULT NULL,
   `metadata` json DEFAULT NULL,
   `orderId` varchar(36) NOT NULL,
@@ -23,5 +28,7 @@ CREATE TABLE `cliente_petiscaria_order_items` (
   PRIMARY KEY (`id`),
   KEY `idx_order_id` (`orderId`),
   KEY `idx_product_id` (`productId`),
-  KEY `idx_company_id` (`companyId`)
+  KEY `idx_company_id` (`companyId`),
+  KEY `idx_status` (`status`),
+  KEY `idx_is_ready` (`isReady`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

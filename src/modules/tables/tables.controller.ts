@@ -53,6 +53,21 @@ export class TablesController {
     return this.tablesService.findByArea(area, companyId);
   }
 
+  @Get('stats')
+  async getTableStats(@Request() req: any) {
+    const companyId = req.user.companyId;
+    const tables = await this.tablesService.findAll({ page: 1, limit: 1000 }, companyId);
+    
+    const occupied = tables.tables.filter(table => table.status === 'occupied').length;
+    const available = tables.tables.filter(table => table.status === 'available').length;
+    
+    return {
+      occupied,
+      available,
+      total: tables.total,
+    };
+  }
+
   @Get(':id')
   async findOne(
     @Param('id') id: string,

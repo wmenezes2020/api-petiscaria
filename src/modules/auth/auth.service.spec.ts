@@ -76,10 +76,23 @@ describe('AuthService', () => {
     documento: '12345678901234',
     cnpj: '12345678901234',
     name: 'Test Company',
-    active: true,
+    email: 'test@company.com',
+    phone: '11999999999',
+    address: 'Rua Teste, 123',
+    city: 'São Paulo',
+    state: 'SP',
+    zipCode: '01234-567',
+    description: 'Empresa de teste',
+    logo: null,
+    banner: null,
     status: 'active',
+    plan: 'basic',
+    planExpiresAt: null,
     pixConfig: null,
     timezone: 'America/Sao_Paulo',
+    active: true,
+    settings: null,
+    openPixConfig: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     users: [],
@@ -87,7 +100,7 @@ describe('AuthService', () => {
     products: [],
     stockMovements: [],
     ingredients: [],
-  };
+  } as Company;
 
   const mockRepository = {
     findOne: jest.fn(),
@@ -298,6 +311,9 @@ describe('AuthService', () => {
       const newCompany = { 
         ...mockCompany, 
         id: '2', 
+        fantasia: registerDto.companyName,
+        razaoSocial: registerDto.companyName,
+        documento: registerDto.cnpj,
         name: registerDto.companyName, 
         cnpj: registerDto.cnpj, 
         email: registerDto.email, 
@@ -306,9 +322,16 @@ describe('AuthService', () => {
         city: registerDto.city, 
         state: registerDto.state, 
         zipCode: registerDto.zipCode,
+        description: null,
+        logo: null,
+        banner: null,
         // Default values set by AuthService
         status: 'active',
         plan: 'basic',
+        planExpiresAt: null,
+        pixConfig: null,
+        timezone: 'America/Sao_Paulo',
+        active: true,
         settings: {
           theme: 'light',
           language: 'pt-BR',
@@ -322,7 +345,15 @@ describe('AuthService', () => {
           requireCustomerPhone: true,
           allowAnonymousOrders: false,
         },
-      };
+        openPixConfig: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        users: [],
+        categories: [],
+        products: [],
+        stockMovements: [],
+        ingredients: [],
+      } as Company;
       const newUser = { ...mockUser, id: '2', email: registerDto.email, companyId: '2', password: hashedPassword, name: registerDto.name, role: UserRole.ADMIN } as User; // Explicitly set role here
 
       jest.spyOn(bcrypt, 'hash').mockResolvedValue(hashedPassword as never);

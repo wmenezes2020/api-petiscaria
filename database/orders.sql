@@ -1,8 +1,11 @@
+DROP TABLE IF EXISTS `cliente_petiscaria_orders`;
 CREATE TABLE `cliente_petiscaria_orders` (
   `id` varchar(36) NOT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'open',
   `channel` varchar(50) NOT NULL DEFAULT 'table',
   `notes` varchar(255) DEFAULT NULL,
+  `orderNumber` varchar(50) DEFAULT NULL,
+  `customerName` varchar(255) DEFAULT NULL,
   `subtotal` decimal(10,2) NOT NULL DEFAULT '0.00',
   `discount` decimal(10,2) NOT NULL DEFAULT '0.00',
   `tax` decimal(10,2) NOT NULL DEFAULT '0.00',
@@ -13,6 +16,7 @@ CREATE TABLE `cliente_petiscaria_orders` (
   `deliveredTime` timestamp NULL DEFAULT NULL,
   `closedTime` timestamp NULL DEFAULT NULL,
   `cancelledTime` timestamp NULL DEFAULT NULL,
+  `paidAt` timestamp NULL DEFAULT NULL,
   `cancellationReason` varchar(255) DEFAULT NULL,
   `metadata` json DEFAULT NULL,
   `companyId` varchar(36) NOT NULL,
@@ -25,10 +29,12 @@ CREATE TABLE `cliente_petiscaria_orders` (
   `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_order_number_company` (`orderNumber`, `companyId`),
   KEY `idx_company_id` (`companyId`),
   KEY `idx_location_id` (`locationId`),
   KEY `idx_status` (`status`),
   KEY `idx_table_id` (`tableId`),
   KEY `idx_customer_id` (`customerId`),
-  KEY `idx_created_by` (`createdBy`)
+  KEY `idx_created_by` (`createdBy`),
+  KEY `idx_order_number` (`orderNumber`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

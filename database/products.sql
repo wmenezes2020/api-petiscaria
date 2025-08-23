@@ -1,4 +1,5 @@
 -- Criação da tabela de produtos (products)
+DROP TABLE IF EXISTS `cliente_petiscaria_products`;
 CREATE TABLE IF NOT EXISTS `cliente_petiscaria_products` (
   `id` char(36) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -18,6 +19,14 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_products` (
   `minStockLevel` int DEFAULT 0,
   `maxStockLevel` int DEFAULT 0,
   `preparationTime` int DEFAULT 0,
+  `costPrice` decimal(10,2) DEFAULT NULL,
+  `isActive` boolean DEFAULT true,
+  `isAvailable` boolean DEFAULT true,
+  `weightUnit` varchar(20) DEFAULT NULL,
+  `mainImage` varchar(255) DEFAULT NULL,
+  `tags` json DEFAULT NULL,
+  `requiresPreparation` boolean DEFAULT false,
+  `pricing` json DEFAULT NULL,
   `isAvailableForDelivery` boolean DEFAULT false,
   `isAvailableForTakeaway` boolean DEFAULT false,
   `isAvailableForDineIn` boolean DEFAULT false,
@@ -47,5 +56,8 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_products` (
   KEY `IDX_categoryId` (`categoryId`),
   KEY `IDX_companyId` (`companyId`),
   KEY `IDX_locationId` (`locationId`),
-  KEY `IDX_status` (`status`)
+  KEY `IDX_status` (`status`),
+  KEY `IDX_cost_price` (`costPrice`),
+  KEY `IDX_is_active` (`isActive`),
+  KEY `IDX_is_available` (`isAvailable`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

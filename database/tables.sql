@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS `cliente_petiscaria_tables`;
 CREATE TABLE `cliente_petiscaria_tables` (
   `id` varchar(36) NOT NULL,
   `number` varchar(10) NOT NULL,
@@ -7,8 +8,8 @@ CREATE TABLE `cliente_petiscaria_tables` (
   `capacity` int NOT NULL DEFAULT '2',
   `minCapacity` int NOT NULL DEFAULT '0',
   `maxCapacity` int NOT NULL DEFAULT '0',
-  `xPosition` decimal(5,2) NOT NULL DEFAULT '0.00',
-  `yPosition` decimal(5,2) NOT NULL DEFAULT '0.00',
+  `x` decimal(5,2) NOT NULL DEFAULT '0.00',
+  `y` decimal(5,2) NOT NULL DEFAULT '0.00',
   `sortOrder` int NOT NULL DEFAULT '0',
   `isActive` boolean NOT NULL DEFAULT true,
   `isReservable` boolean NOT NULL DEFAULT false,
@@ -18,6 +19,10 @@ CREATE TABLE `cliente_petiscaria_tables` (
   `description` varchar(255) DEFAULT NULL,
   `features` json DEFAULT NULL,
   `metadata` json DEFAULT NULL,
+  `minimumOrder` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `currentOrderId` varchar(36) DEFAULT NULL,
+  `currentCustomerCount` int NOT NULL DEFAULT '0',
+  `openedAt` timestamp NULL DEFAULT NULL,
   `companyId` varchar(36) NOT NULL,
   `locationId` varchar(36) DEFAULT NULL,
   `areaId` varchar(36) DEFAULT NULL,
@@ -28,5 +33,7 @@ CREATE TABLE `cliente_petiscaria_tables` (
   KEY `idx_company_id` (`companyId`),
   KEY `idx_location_id` (`locationId`),
   KEY `idx_area_id` (`areaId`),
-  KEY `idx_status` (`status`)
+  KEY `idx_status` (`status`),
+  KEY `idx_current_order` (`currentOrderId`),
+  CONSTRAINT `FK_tables_current_order` FOREIGN KEY (`currentOrderId`) REFERENCES `cliente_petiscaria_orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

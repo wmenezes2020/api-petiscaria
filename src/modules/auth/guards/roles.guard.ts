@@ -12,10 +12,39 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    
+    // Se não há roles requeridos, permitir acesso
     if (!requiredRoles) {
       return true;
     }
-    const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.role?.includes(role));
+
+    const request = context.switchToHttp().getRequest();
+    const { user } = request;
+
+    // Debug: verificar se o usuário existe
+    if (!user) {
+      console.error('🚨 RolesGuard: Usuário não encontrado na requisição');
+      console.error('🚨 Headers:', request.headers);
+      console.error('🚨 URL:', request.url);
+      return false;
+    }
+
+    // Debug: verificar estrutura do usuário
+    if (!user.role) {
+      console.error('🚨 RolesGuard: Usuário não tem role definido');
+      console.error('🚨 User object:', user);
+      return false;
+    }
+
+    // Verificar se o usuário tem pelo menos uma das roles requeridas
+    const hasRequiredRole = requiredRoles.some((role) => user.role?.includes(role));
+    
+    if (!hasRequiredRole) {
+      console.error('🚨 RolesGuard: Usuário não tem role suficiente');
+      console.error('🚨 User role:', user.role);
+      console.error('🚨 Required roles:', requiredRoles);
+    }
+
+    return hasRequiredRole;
   }
 }

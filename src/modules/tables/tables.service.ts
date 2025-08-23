@@ -34,11 +34,15 @@ export class TablesService {
   }
 
   async findAll(query: TableQueryDto, companyId: string): Promise<{ tables: TableResponseDto[]; total: number }> {
+    // Garantir valores padrão válidos
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    
     const queryBuilder = this.buildQueryBuilder(query, companyId);
     
     const [tables, total] = await queryBuilder
-      .skip((query.page - 1) * query.limit)
-      .take(query.limit)
+      .skip((page - 1) * limit)
+      .take(limit)
       .getManyAndCount();
 
     const tableResponses = tables.map(table => this.mapTableToResponse(table));
@@ -101,10 +105,13 @@ export class TablesService {
   }
 
   async findByArea(area: string, companyId: string): Promise<TableResponseDto[]> {
-    const tables = await this.tableRepository.find({
-      where: { area, companyId },
-      order: { name: 'ASC' },
-    });
+    const tables = await this.tableRepository
+      .createQueryBuilder('table')
+      .leftJoinAndSelect('table.areaRelation', 'area')
+      .where('area.name = :areaName', { areaName: area })
+      .andWhere('table.companyId = :companyId', { companyId })
+      .orderBy('table.name', 'ASC')
+      .getMany();
 
     return tables.map(table => this.mapTableToResponse(table));
   }
@@ -219,11 +226,12 @@ export class TablesService {
   private buildQueryBuilder(query: TableQueryDto, companyId: string): SelectQueryBuilder<Table> {
     const queryBuilder = this.tableRepository
       .createQueryBuilder('table')
+      .leftJoinAndSelect('table.areaRelation', 'area')
       .where('table.companyId = :companyId', { companyId });
 
     if (query.search) {
       queryBuilder.andWhere(
-        '(table.name LIKE :search OR table.description LIKE :search OR table.area LIKE :search)',
+        '(table.name LIKE :search OR table.description LIKE :search)',
         { search: `%${query.search}%` }
       );
     }
@@ -237,7 +245,7 @@ export class TablesService {
     }
 
     if (query.area) {
-      queryBuilder.andWhere('table.area = :area', { area: query.area });
+      queryBuilder.andWhere('area.name = :areaName', { areaName: query.area });
     }
 
     if (query.minCapacity) {
@@ -274,9 +282,9 @@ export class TablesService {
       name: table.name,
       capacity: table.capacity,
       shape: table.shape as TableShape,
-      x: table.xPosition,
-      y: table.yPosition,
-      area: table.area,
+      x: table.x,
+      y: table.y,
+      area: table.areaRelation?.name || null, // Usar o nome da área relacionada
       description: table.description,
       isActive: table.isActive,
       isSmoking: table.isSmoking,

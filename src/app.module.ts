@@ -29,6 +29,7 @@ import { ModifiersModule } from './modules/modifiers/modifiers.module';
 import { AuditModule } from './modules/audit/audit.module';
 
 import { RolesGuard } from './modules/auth/guards/roles.guard';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 import { validationSchema } from './config/env.validation';
 import { jwtConfig } from './config/jwt.config';
@@ -67,6 +68,10 @@ import { typeOrmConfig } from './config/typeorm.config';
     AuditModule,
   ],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: RolesGuard,

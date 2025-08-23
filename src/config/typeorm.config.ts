@@ -12,7 +12,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   entities: [join(__dirname, '..', 'entities', '*.entity{.ts,.js}')],
   migrations: [join(__dirname, '..', 'database', 'migrations', '*{.ts,.js}')],
   synchronize: false, // Desabilitado temporariamente para evitar conflitos
-  logging: process.env.DB_LOGGING === 'true',
+  logging: process.env.DB_LOGGING === 'false',
   charset: 'utf8mb4',
   timezone: 'Z',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,

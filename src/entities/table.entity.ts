@@ -69,24 +69,12 @@ export class Table {
   maxCapacity: number;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
-  xPosition: number; // posição X no mapa da sala
-
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
-  yPosition: number; // posição Y no mapa da sala
-
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   x: number; // posição X no mapa da sala
 
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   y: number; // posição Y no mapa da sala
 
-  @Column({ type: 'uuid', nullable: true })
-  areaId: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  area: string;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   minimumOrder: number;
 
   @Column({ type: 'uuid', nullable: true })
@@ -97,6 +85,9 @@ export class Table {
 
   @Column({ type: 'timestamp', nullable: true })
   openedAt: Date;
+
+  @Column({ type: 'uuid', nullable: true })
+  areaId: string;
 
   @Column({ type: 'int', default: 0 })
   sortOrder: number;
@@ -212,12 +203,12 @@ export class Table {
   }
 
   getPosition(): { x: number; y: number } {
-    return { x: this.xPosition, y: this.yPosition };
+    return { x: this.x, y: this.y };
   }
 
   setPosition(x: number, y: number): void {
-    this.xPosition = x;
-    this.yPosition = y;
+    this.x = x;
+    this.y = y;
   }
 
   markAsOccupied(): void {
