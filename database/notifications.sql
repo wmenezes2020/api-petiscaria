@@ -1,0 +1,26 @@
+-- Tabela de notificações
+CREATE TABLE IF NOT EXISTS `cliente_petiscaria_notifications` (
+  `id` char(36) NOT NULL,
+  `companyId` char(36) NOT NULL,
+  `userId` char(36) DEFAULT NULL,
+  `type` varchar(100) NOT NULL COMMENT 'Tipo da notificação',
+  `priority` varchar(50) DEFAULT 'medium' COMMENT 'Prioridade da notificação',
+  `status` varchar(50) DEFAULT 'unread' COMMENT 'Status da notificação',
+  `title` varchar(255) NOT NULL COMMENT 'Título da notificação',
+  `message` text NOT NULL COMMENT 'Mensagem da notificação',
+  `metadata` json DEFAULT NULL COMMENT 'Metadados adicionais',
+  `actionUrl` varchar(255) DEFAULT NULL COMMENT 'URL de ação da notificação',
+  `readAt` timestamp NULL DEFAULT NULL COMMENT 'Data/hora de leitura',
+  `expiresAt` timestamp NULL DEFAULT NULL COMMENT 'Data/hora de expiração',
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Data/hora de criação',
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Data/hora de atualização',
+  PRIMARY KEY (`id`),
+  KEY `idx_company_id` (`companyId`),
+  KEY `idx_user_id` (`userId`),
+  KEY `idx_type` (`type`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`createdAt`),
+  KEY `idx_expires_at` (`expiresAt`),
+  CONSTRAINT `fk_notifications_company` FOREIGN KEY (`companyId`) REFERENCES `cliente_petiscaria_companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_notifications_user` FOREIGN KEY (`userId`) REFERENCES `cliente_petiscaria_users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabela de notificações do sistema';

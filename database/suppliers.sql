@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS `cliente_petiscaria_suppliers` (
+  `id` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `contactName` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `cnpj` varchar(18) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `state` varchar(2) DEFAULT NULL,
+  `zipCode` varchar(10) DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'active' COMMENT 'active, inactive',
+  `notes` text,
+  `companyId` varchar(36) NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `IDX_suppliers_cnpj_companyId` (`cnpj`,`companyId`),
+  UNIQUE KEY `IDX_suppliers_email_companyId` (`email`,`companyId`),
+  KEY `IDX_suppliers_companyId` (`companyId`),
+  CONSTRAINT `FK_suppliers_companyId` FOREIGN KEY (`companyId`) REFERENCES `cliente_petiscaria_companies` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

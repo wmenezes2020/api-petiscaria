@@ -1,0 +1,23 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Instalar dependências do sistema
+RUN apk add --no-cache python3 make g++
+
+# Copiar package.json e package-lock.json
+COPY package*.json ./
+
+# Instalar todas as dependências (incluindo devDependencies)
+RUN npm install
+
+# Criar diretório de uploads e logs
+RUN mkdir -p uploads logs
+
+# Expor porta
+EXPOSE 3001
+
+# Comando para executar em modo de desenvolvimento
+CMD ["npm", "run", "start:dev"]
+
+
