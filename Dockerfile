@@ -15,8 +15,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig*.json ./
 
-# Instalar dependências
-RUN npm ci --only=production && npm cache clean --force
+# Instalar dependências (incluindo dev para build)
+RUN npm ci && npm cache clean --force
 
 # Stage de desenvolvimento (opcional)
 FROM base AS development

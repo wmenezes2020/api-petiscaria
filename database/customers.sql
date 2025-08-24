@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS `cliente_petiscaria_customers`;
 CREATE TABLE `cliente_petiscaria_customers` (
   `id` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -7,6 +8,7 @@ CREATE TABLE `cliente_petiscaria_customers` (
   `cnpj` varchar(18) DEFAULT NULL,
   `type` varchar(50) NOT NULL DEFAULT 'individual',
   `status` varchar(50) NOT NULL DEFAULT 'active',
+  `notes` text DEFAULT NULL,
   `address` varchar(255) DEFAULT NULL,
   `city` varchar(100) DEFAULT NULL,
   `state` varchar(2) DEFAULT NULL,
@@ -17,6 +19,7 @@ CREATE TABLE `cliente_petiscaria_customers` (
   `totalOrders` int NOT NULL DEFAULT '0',
   `totalVisits` int NOT NULL DEFAULT '0',
   `lastVisitAt` timestamp NULL DEFAULT NULL,
+  `lastVisitDate` timestamp NULL DEFAULT NULL,
   `lastOrderAt` timestamp NULL DEFAULT NULL,
   `averageTicket` decimal(10,2) NOT NULL DEFAULT '0.00',
   `preferences` json DEFAULT NULL,

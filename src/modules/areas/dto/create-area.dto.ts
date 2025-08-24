@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateAreaDto {
   @IsString()
@@ -8,6 +8,10 @@ export class CreateAreaDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  locationId: string;
 }
 
 

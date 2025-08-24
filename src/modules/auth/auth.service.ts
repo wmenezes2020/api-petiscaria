@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { User } from '../../entities/user.entity';
+import { User, UserRole, UserStatus } from '../../entities/user.entity';
 import { Company } from '../../entities/company.entity';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -63,8 +63,8 @@ export class AuthService {
       name,
       email,
       password: hashedPassword,
-      role: 'admin',
-      status: 'active',
+      role: UserRole.ADMIN,
+      status: UserStatus.ACTIVE,
       companyId: savedCompany.id,
       permissions: {
         canManageUsers: true,
@@ -125,7 +125,7 @@ export class AuthService {
     }
 
     // Verificar status do usuário
-    if (user.status !== 'active') {
+    if (user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException('Usuário inativo ou suspenso');
     }
 
@@ -172,7 +172,7 @@ export class AuthService {
       relations: ['company'],
     });
 
-    if (!user || user.status !== 'active') {
+    if (!user || user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException('Usuário inválido ou inativo');
     }
 

@@ -12,7 +12,10 @@ export class AreasService {
   ) {}
 
   async create(createAreaDto: CreateAreaDto, companyId: string): Promise<AreaResponseDto> {
-    const area = this.areaRepository.create({ ...createAreaDto, companyId });
+    const area = this.areaRepository.create({ 
+      ...createAreaDto, 
+      companyId 
+    });
     const savedArea = await this.areaRepository.save(area);
     return new AreaResponseDto(savedArea);
   }
@@ -31,7 +34,11 @@ export class AreasService {
   }
 
   async update(id: string, updateAreaDto: UpdateAreaDto, companyId: string): Promise<AreaResponseDto> {
-    const area = await this.areaRepository.preload({ id, companyId, ...updateAreaDto });
+    const area = await this.areaRepository.preload({ 
+      id, 
+      companyId, 
+      ...updateAreaDto 
+    });
     if (!area) {
       throw new NotFoundException(`Area with ID ${id} not found`);
     }

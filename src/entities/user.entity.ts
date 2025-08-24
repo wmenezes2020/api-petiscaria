@@ -51,20 +51,18 @@ export class User {
   password: string;
 
   @Column({ 
-    type: 'varchar', 
-    length: 50, 
-    default: 'waiter',
-    comment: 'owner, admin, manager, cashier, waiter, kitchen, delivery'
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.WAITER
   })
-  role: string;
+  role: UserRole;
 
   @Column({ 
-    type: 'varchar', 
-    length: 50, 
-    default: 'active',
-    comment: 'active, inactive, suspended'
+    type: 'enum',
+    enum: UserStatus,
+    default: UserStatus.ACTIVE
   })
-  status: string;
+  status: UserStatus;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   avatar: string;

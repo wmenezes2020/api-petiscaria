@@ -37,7 +37,7 @@ export class RolesGuard implements CanActivate {
     }
 
     // Verificar se o usuário tem pelo menos uma das roles requeridas
-    const hasRequiredRole = requiredRoles.some((role) => user.role?.includes(role));
+    const hasRequiredRole = requiredRoles.some((role) => user.role === role);
     
     if (!hasRequiredRole) {
       console.error('🚨 RolesGuard: Usuário não tem role suficiente');

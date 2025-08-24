@@ -33,6 +33,11 @@ async function bootstrap() {
   // Prefixo da API
   app.setGlobalPrefix(configService.get('API_PREFIX') || 'api/v1');
 
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   // Configuração do Swagger
   if (configService.get('NODE_ENV') !== 'production') {
     setupSwagger(app);
