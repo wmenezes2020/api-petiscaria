@@ -3,7 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 
 export const typeOrmConfig = (): TypeOrmModuleOptions => {
-  const dbType = (process.env.DB_TYPE || 'mysql') as any;
+  // Hardcoded para mysql já que é o banco da aplicação
+  const dbType = 'mysql';
   
   // Em produção, sempre desabilitar synchronize para evitar conflitos
   const isProduction = process.env.NODE_ENV === 'production';
