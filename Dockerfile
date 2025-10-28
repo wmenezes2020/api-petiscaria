@@ -27,6 +27,10 @@ RUN npm run build
 # Stage de produção
 FROM base AS production
 
+# Definir variáveis de ambiente padrão
+ENV NODE_ENV=production
+ENV DB_TYPE=mysql
+
 # Criar usuário não-root para segurança
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nestjs -u 1001

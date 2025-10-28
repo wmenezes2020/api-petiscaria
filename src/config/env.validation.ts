@@ -9,13 +9,14 @@ export const validationSchema = Joi.object({
   API_PREFIX: Joi.string().default('api/v1'),
   
   // Database
+  DB_TYPE: Joi.string().valid('mysql', 'postgres').default('mysql'),
   DB_HOST: Joi.string().default('mysql'),
-  DB_PORT: Joi.number().default(3306),
+  DB_PORT: Joi.string().default('3306'),
   DB_USERNAME: Joi.string().required(),
   DB_PASSWORD: Joi.string().required(),
   DB_DATABASE: Joi.string().required(),
-  DB_SYNCHRONIZE: Joi.boolean().default(false),
-  DB_LOGGING: Joi.boolean().default(false),
+  DB_SYNCHRONIZE: Joi.string().valid('true', 'false').default('false'),
+  DB_LOGGING: Joi.string().valid('true', 'false').default('false'),
   
   // Redis
   REDIS_HOST: Joi.string().default('redis'),
