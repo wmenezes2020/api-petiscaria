@@ -18,7 +18,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => {
     database: process.env.DB_DATABASE || 'petiscaria_db',
     entities: [join(__dirname, '..', 'entities', '*.entity{.ts,.js}')],
     migrations: [join(__dirname, '..', 'database', 'migrations', '*{.ts,.js}')],
-    // synchronize,
+    synchronize,
     logging: process.env.DB_LOGGING === 'true',
     charset: 'utf8mb4',
     timezone: 'Z',
