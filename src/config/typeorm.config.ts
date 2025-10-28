@@ -5,6 +5,10 @@ import { join } from 'path';
 export const typeOrmConfig = (): TypeOrmModuleOptions => {
   const dbType = (process.env.DB_TYPE || 'mysql') as any;
   
+  // Em produção, sempre desabilitar synchronize para evitar conflitos
+  const isProduction = process.env.NODE_ENV === 'production';
+  const synchronize = !isProduction && process.env.DB_SYNCHRONIZE === 'true';
+  
   return {
     type: dbType,
     host: process.env.DB_HOST || 'mysql',
@@ -14,11 +18,11 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => {
     database: process.env.DB_DATABASE || 'petiscaria_db',
     entities: [join(__dirname, '..', 'entities', '*.entity{.ts,.js}')],
     migrations: [join(__dirname, '..', 'database', 'migrations', '*{.ts,.js}')],
-    synchronize: process.env.DB_SYNCHRONIZE === 'true',
+    // synchronize,
     logging: process.env.DB_LOGGING === 'true',
     charset: 'utf8mb4',
     timezone: 'Z',
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl: isProduction ? { rejectUnauthorized: false } : false,
     autoLoadEntities: true,
   };
 };
