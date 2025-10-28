@@ -122,6 +122,33 @@ export class OrdersController {
     return this.ordersService.getOrdersByStatus(OrderStatus.READY, req.user.companyId);
   }
 
+  // Endpoints para divisão e junção de pedidos
+  @Post(':id/split')
+  @HttpCode(HttpStatus.CREATED)
+  async splitOrder(
+    @Param('id') id: string,
+    @Body() splitOrderDto: any,
+    @Request() req,
+  ): Promise<OrderResponseDto[]> {
+    return this.ordersService.splitOrder(
+      id,
+      splitOrderDto,
+      req.user.companyId,
+    );
+  }
+
+  @Post('merge')
+  @HttpCode(HttpStatus.CREATED)
+  async mergeOrders(
+    @Body() mergeOrdersDto: { orderIds: string[] },
+    @Request() req,
+  ): Promise<OrderResponseDto> {
+    return this.ordersService.mergeOrders(
+      mergeOrdersDto.orderIds,
+      req.user.companyId,
+    );
+  }
+
   // Endpoints para estatísticas
   @Get('stats/summary')
   async getOrderStats(@Request() req) {

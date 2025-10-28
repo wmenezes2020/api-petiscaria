@@ -27,6 +27,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { LocationsModule } from './modules/locations/locations.module';
 import { ModifiersModule } from './modules/modifiers/modifiers.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { HealthModule } from './modules/health/health.module';
 
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
@@ -66,6 +67,7 @@ import { typeOrmConfig } from './config/typeorm.config';
     LocationsModule,
     ModifiersModule,
     AuditModule,
+    HealthModule,
   ],
   providers: [
     {

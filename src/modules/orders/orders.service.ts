@@ -371,6 +371,109 @@ export class OrdersService {
     return queryBuilder;
   }
 
+  async splitOrder(id: string, splitData: any, companyId: string): Promise<OrderResponseDto[]> {
+    const originalOrder = await this.orderRepository.findOne({
+      where: { id, companyId },
+      relations: ['orderItems'],
+    });
+
+    if (!originalOrder) {
+      throw new NotFoundException('Pedido não encontrado');
+    }
+    
+    if (!originalOrder.canBeModified()) {
+      throw new BadRequestException('Este pedido não pode ser dividido');
+    }
+
+    const newOrder = this.orderRepository.create({
+      ...originalOrder,
+      id: undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      total: splitData.items.reduce((sum, item) => sum + item.totalPrice, 0),
+      subtotal: splitData.items.reduce((sum, item) => sum + item.totalPrice, 0) - originalOrder.discount,
+      notes: `Pedido dividido de #${originalOrder.id}`,
+    });
+
+    const savedNewOrder = await this.orderRepository.save(newOrder);
+
+    // Copiar itens para o novo pedido
+    const newOrderItems = splitData.items.map(item => {
+      const originalItem = originalOrder.orderItems.find(oi => oi.id === item.orderItemId);
+      return this.orderItemRepository.create({
+        ...originalItem,
+        id: undefined,
+        orderId: savedNewOrder.id,
+        quantity: item.quantity,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    });
+
+    await this.orderItemRepository.save(newOrderItems);
+
+    // Notificar KDS
+    this.kitchenGateway.notifyNewOrder(companyId, savedNewOrder as any);
+
+    return [await this.findOne(id, companyId), await this.findOne(savedNewOrder.id, companyId)];
+  }
+
+  async mergeOrders(orderIds: string[], companyId: string): Promise<OrderResponseDto> {
+    if (orderIds.length < 2) {
+      throw new BadRequestException('É necessário pelo menos 2 pedidos para junção');
+    }
+
+    const orders = await Promise.all(
+      orderIds.map(id => this.orderRepository.findOne({ where: { id, companyId }, relations: ['orderItems'] }))
+    );
+
+    if (orders.some(order => !order)) {
+      throw new NotFoundException('Um ou mais pedidos não foram encontrados');
+    }
+
+    if (orders.some(order => !order.canBeModified())) {
+      throw new BadRequestException('Um ou mais pedidos não podem ser modificados');
+    }
+
+    const [primaryOrder, ...otherOrders] = orders;
+
+    // Consolidar itens criando novos objetos
+    const allItems = [...primaryOrder.orderItems];
+    otherOrders.forEach(order => {
+      order.orderItems.forEach(item => {
+        allItems.push(this.orderItemRepository.create({
+          ...item,
+          id: undefined,
+          orderId: primaryOrder.id,
+        }) as any);
+      });
+    });
+
+    // Remover pedidos secundários (soft delete)
+    for (const order of otherOrders) {
+      await this.orderRepository.update(order.id, {
+        status: OrderStatus.CANCELLED,
+        cancelledTime: new Date(),
+      });
+    }
+
+    // Salvar novos itens
+    await this.orderItemRepository.save(allItems.filter((_, index) => index >= primaryOrder.orderItems.length));
+
+    // Recalcular totais do pedido principal
+    const newTotal = allItems.reduce((sum: number, item: any) => sum + item.totalPrice, 0);
+    await this.orderRepository.update(primaryOrder.id, {
+      total: newTotal,
+      subtotal: newTotal - primaryOrder.discount,
+      notes: `${primaryOrder.notes || ''}\nPedidos juntados: ${orderIds.slice(1).join(', ')}`.trim(),
+    });
+
+    // Notificar KDS
+    this.kitchenGateway.notifyOrderUpdate(companyId, primaryOrder as any);
+
+    return this.findOne(primaryOrder.id, companyId);
+  }
+
   private async mapOrderToResponse(order: Order): Promise<OrderResponseDto> {
     return {
       id: order.id,

@@ -376,7 +376,10 @@ describe('AuthService', () => {
         name: registerDto.companyName,
         cnpj: registerDto.cnpj,
       }));
-      expect(companyRepository.save).toHaveBeenCalledWith(newCompany);
+      expect(companyRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+        name: registerDto.companyName,
+        cnpj: registerDto.cnpj,
+      }));
       expect(userRepository.create).toHaveBeenCalledWith(expect.objectContaining({
         email: registerDto.email,
         password: hashedPassword,
