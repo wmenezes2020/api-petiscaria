@@ -1,9 +1,12 @@
 const http = require('http');
 
+const port = process.env.PORT || 3000;
+const path = process.env.HEALTHCHECK_PATH || '/api/v1/health';
+
 const options = {
   hostname: 'localhost',
-  port: 3001,
-  path: '/api/v1/health',
+  port: port,
+  path: path,
   method: 'GET',
   timeout: 2000
 };
