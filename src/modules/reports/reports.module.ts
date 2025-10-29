@@ -7,7 +7,7 @@ import { Category } from 'src/entities/category.entity';
 import { Customer } from 'src/entities/customer.entity';
 import { Payment } from 'src/entities/payment.entity';
 import { StockMovement } from 'src/entities/stock-movement.entity';
-import { Ingredient } from 'src/entities/ingredient.entity';
+// import { Ingredient } from 'src/entities/ingredient.entity';
 import { Table } from 'src/entities/table.entity';
 import { ReportsController } from './reports.controller';
 import { ReportsService } from './reports.service';
@@ -22,7 +22,7 @@ import { ReportsService } from './reports.service';
       Customer, 
       Payment, 
       StockMovement, 
-      Ingredient, 
+      // Ingredient, 
       Table
     ])
   ],

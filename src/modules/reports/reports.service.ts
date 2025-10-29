@@ -9,7 +9,7 @@ import { Payment } from '../../entities/payment.entity';
 import { ReportQueryDto, ReportPeriod, DashboardResponseDto } from './dto';
 import { OrderItem } from '../../entities/order-item.entity';
 import { Category } from '../../entities/category.entity';
-import { Ingredient } from '../../entities/ingredient.entity';
+// import { Ingredient } from '../../entities/ingredient.entity';
 import { Table, TableStatus } from '../../entities/table.entity';
 
 @Injectable()
