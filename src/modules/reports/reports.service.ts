@@ -29,8 +29,8 @@ export class ReportsService {
     private readonly paymentRepository: Repository<Payment>,
     @InjectRepository(StockMovement)
     private readonly stockMovementRepository: Repository<StockMovement>,
-    @InjectRepository(Ingredient)
-    private readonly ingredientRepository: Repository<Ingredient>,
+    // @InjectRepository(Ingredient)
+    // private readonly ingredientRepository: Repository<Ingredient>,
     @InjectRepository(Table)
     private readonly tableRepository: Repository<Table>,
   ) {}
