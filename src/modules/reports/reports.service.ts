@@ -330,7 +330,6 @@ export class ReportsService {
     // Pedidos recentes
     const recentOrders = await this.orderRepository
       .createQueryBuilder('order')
-      .leftJoinAndSelect('order.customer', 'customer')
       .where('order.companyId = :companyId', { companyId })
       .andWhere('order.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
       .orderBy('order.createdAt', 'DESC')
