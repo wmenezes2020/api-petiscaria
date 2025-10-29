@@ -8,6 +8,7 @@ export class LocationResponseDto {
   state: string;
   zipCode: string;
   phone: string;
+  email: string;
   isActive: boolean;
 
   constructor(location: Location) {
@@ -18,6 +19,7 @@ export class LocationResponseDto {
     this.state = location.state;
     this.zipCode = location.zipCode;
     this.phone = location.phone;
+    this.email = location.email;
     this.isActive = location.isActive;
   }
 }

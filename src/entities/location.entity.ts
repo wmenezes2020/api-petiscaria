@@ -33,6 +33,9 @@ export class Location {
 
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  email: string;
   
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
