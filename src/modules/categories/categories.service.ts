@@ -134,7 +134,12 @@ export class CategoriesService {
 
     const sortBy = query.sortBy || 'name';
     const sortOrder = query.sortOrder || 'ASC';
-    queryBuilder.orderBy(`category.${sortBy}`, sortOrder);
+    
+    // Validar que o campo existe na entidade Category
+    const allowedSortFields = ['name', 'sortOrder', 'order', 'createdAt', 'updatedAt'];
+    const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'name';
+    
+    queryBuilder.orderBy(`category.${validSortBy}`, sortOrder);
 
     return queryBuilder;
   }

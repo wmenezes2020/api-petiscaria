@@ -400,7 +400,12 @@ export class PaymentsService {
     // Ordenação
     const sortBy = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder || 'DESC';
-    queryBuilder.orderBy(`payment.${sortBy}`, sortOrder);
+    
+    // Validar que o campo existe na entidade Payment
+    const allowedSortFields = ['createdAt', 'updatedAt', 'amount', 'status', 'paymentMethod', 'paymentType'];
+    const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    
+    queryBuilder.orderBy(`payment.${validSortBy}`, sortOrder);
 
     return queryBuilder;
   }
