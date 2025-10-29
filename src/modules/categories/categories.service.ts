@@ -136,7 +136,7 @@ export class CategoriesService {
     const sortOrder = query.sortOrder || 'ASC';
     
     // Validar que o campo existe na entidade Category
-    const allowedSortFields = ['name', 'sortOrder', 'order', 'createdAt', 'updatedAt'];
+    const allowedSortFields = ['name', 'sortOrder', 'order', 'createdAt', 'updatedAt', 'isActive', 'isVisible'];
     const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'name';
     
     queryBuilder.orderBy(`category.${validSortBy}`, sortOrder);
