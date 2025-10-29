@@ -136,15 +136,11 @@ export class CategoriesService {
     const sortOrder = query.sortOrder || 'ASC';
     
     // Validar que o campo existe na entidade Category
-    const allowedSortFields = ['name', 'sortOrder', 'order', 'createdAt', 'updatedAt', 'isActive', 'isVisible'];
+    // Removido 'order' da lista pois não existe como coluna no banco
+    const allowedSortFields = ['name', 'sortOrder', 'createdAt', 'updatedAt', 'isActive', 'isVisible'];
     const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'name';
     
-    // Usar backticks para campo 'order' porque é palavra reservada em MySQL
-    if (validSortBy === 'order') {
-      queryBuilder.orderBy(`category.\`order\``, sortOrder);
-    } else {
-      queryBuilder.orderBy(`category.${validSortBy}`, sortOrder);
-    }
+    queryBuilder.orderBy(`category.${validSortBy}`, sortOrder);
 
     return queryBuilder;
   }
