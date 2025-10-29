@@ -10,7 +10,7 @@ import { AreasModule } from './modules/areas/areas.module';
 import { TablesModule } from './modules/tables/tables.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ProductsModule } from './modules/products/products.module';
-import { IngredientsModule } from './modules/ingredients/ingredients.module';
+// import { IngredientsModule } from './modules/ingredients/ingredients.module';
 import { RecipesModule } from './modules/recipes/recipes.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
@@ -50,7 +50,7 @@ import { typeOrmConfig } from './config/typeorm.config';
     TablesModule,
     CategoriesModule,
     ProductsModule,
-    IngredientsModule,
+    // IngredientsModule,
     RecipesModule,
     OrdersModule,
     PaymentsModule,
