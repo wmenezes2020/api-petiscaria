@@ -139,7 +139,12 @@ export class CategoriesService {
     const allowedSortFields = ['name', 'sortOrder', 'order', 'createdAt', 'updatedAt', 'isActive', 'isVisible'];
     const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'name';
     
-    queryBuilder.orderBy(`category.${validSortBy}`, sortOrder);
+    // Usar backticks para campo 'order' porque é palavra reservada em MySQL
+    if (validSortBy === 'order') {
+      queryBuilder.orderBy(`category.\`order\``, sortOrder);
+    } else {
+      queryBuilder.orderBy(`category.${validSortBy}`, sortOrder);
+    }
 
     return queryBuilder;
   }
