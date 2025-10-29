@@ -587,23 +587,24 @@ export class ReportsService {
   }
 
   private async getTopCustomers(companyId: string, startDate: Date, endDate: Date) {
+    // Como a entidade Order não tem relação customer, vamos usar customerName
     const result = await this.orderRepository
       .createQueryBuilder('order')
-      .leftJoin('order.customer', 'customer')
-      .select('customer.name', 'name')
+      .select('order.customerName', 'name')
       .addSelect('COUNT(order.id)', 'totalOrders')
       .addSelect('SUM(order.total)', 'totalSpent')
       .addSelect('MAX(order.createdAt)', 'lastOrder')
       .where('order.companyId = :companyId', { companyId })
       .andWhere('order.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
-      .andWhere('order.status = :status', { status: 'completed' })
-      .groupBy('customer.id')
+      .andWhere('order.status = :status', { status: OrderStatus.CLOSED })
+      .andWhere('order.customerName IS NOT NULL')
+      .groupBy('order.customerName')
       .orderBy('totalSpent', 'DESC')
       .limit(10)
       .getRawMany();
 
-    return result.map(customer => ({
-      id: customer.customerId,
+    return result.map((customer, index) => ({
+      id: `customer-${index}`,
       name: customer.name,
       totalOrders: parseInt(customer.totalOrders),
       totalSpent: parseFloat(customer.totalSpent),
