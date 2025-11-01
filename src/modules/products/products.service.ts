@@ -24,9 +24,14 @@ export class ProductsService {
       throw new NotFoundException('Categoria não encontrada');
     }
 
+    // Compatibilizar imageUrl -> mainImage
+    const { imageUrl, ...restDto } = (createProductDto as any);
+    const mainImage = restDto.mainImage ?? imageUrl;
+
     // Criar o produto
     const product = this.productRepository.create({
-      ...createProductDto,
+      ...restDto,
+      mainImage,
       companyId,
       isActive: createProductDto.isActive ?? true,
       isAvailable: createProductDto.isAvailable ?? true,
@@ -39,7 +44,8 @@ export class ProductsService {
     });
 
     const savedProduct = await this.productRepository.save(product);
-    return this.mapProductToResponse(savedProduct, category);
+    const normalizedProduct = Array.isArray(savedProduct) ? savedProduct[0] : savedProduct;
+    return this.mapProductToResponse(normalizedProduct as Product, category);
   }
 
   async findAll(query: ProductQueryDto, companyId: string): Promise<{ products: ProductResponseDto[]; total: number }> {
@@ -137,8 +143,15 @@ export class ProductsService {
       }
     }
 
+    // Compatibilizar imageUrl -> mainImage
+    const { imageUrl, ...restDto } = (updateProductDto as any);
+    const payload: any = { ...restDto };
+    if (imageUrl !== undefined && payload.mainImage === undefined) {
+      payload.mainImage = imageUrl;
+    }
+
     // Atualizar o produto
-    await this.productRepository.update(id, updateProductDto);
+    await this.productRepository.update(id, payload);
 
     // Retornar o produto atualizado
     return this.findOne(id, companyId);

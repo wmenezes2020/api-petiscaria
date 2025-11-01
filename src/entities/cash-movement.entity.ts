@@ -11,7 +11,6 @@ import {
 import { User } from './user.entity';
 import { Order } from './order.entity';
 import { Payment } from './payment.entity';
-import { Location } from './location.entity';
 import { Company } from './company.entity';
 import { CashRegister } from './cash-register.entity';
 
@@ -38,22 +37,15 @@ export enum PaymentMethod {
 
 @Entity('cliente_petiscaria_cash_movements')
 @Index(['companyId', 'cashRegisterId'])
-@Index(['locationId', 'cashRegisterId'])
 @Index(['companyId', 'movementType'])
-@Index(['locationId', 'movementType'])
 @Index(['companyId', 'createdAt'])
-@Index(['locationId', 'createdAt'])
 @Index(['companyId', 'userId'])
-@Index(['locationId', 'userId'])
 export class CashMovement {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ type: 'uuid' })
   companyId: string;
-
-  @Column({ type: 'uuid', nullable: true })
-  locationId: string;
 
   @Column({ type: 'uuid' })
   cashRegisterId: string;
@@ -117,10 +109,6 @@ export class CashMovement {
   @ManyToOne(() => Company)
   @JoinColumn({ name: 'companyId' })
   company: Company;
-
-  @ManyToOne(() => Location)
-  @JoinColumn({ name: 'locationId' })
-  location: Location;
 
   @ManyToOne(() => CashRegister, (cashRegister) => cashRegister.movements)
   @JoinColumn({ name: 'cashRegisterId' })

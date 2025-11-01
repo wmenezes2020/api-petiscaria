@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class UpdateAreaDto {
   @IsString()
@@ -8,10 +8,6 @@ export class UpdateAreaDto {
   @IsString()
   @IsOptional()
   description?: string;
-
-  @IsUUID()
-  @IsOptional()
-  locationId?: string;
 }
 
 

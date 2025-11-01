@@ -19,6 +19,7 @@ import { UpdateTableDto } from './dto/update-table.dto';
 import { TableQueryDto } from './dto/table-query.dto';
 import { TableResponseDto } from './dto/table-response.dto';
 import { UpdateTableStatusDto } from './dto/update-table-status.dto';
+import { OpenTableOrderDto, AddItemsTableOrderDto, CloseTableOrderDto } from './dto';
 
 @Controller('tables')
 @UseGuards(JwtAuthGuard)
@@ -111,6 +112,38 @@ export class TablesController {
   ): Promise<TableResponseDto> {
     const companyId = req.user.companyId;
     return this.tablesService.reserveTable(id, companyId, reservationData);
+  }
+
+  @Post(':id/open')
+  async openTableCommand(
+    @Param('id') id: string,
+    @Body() openDto: OpenTableOrderDto,
+    @Request() req: any,
+  ) {
+    const companyId = req.user.companyId;
+    const userId = req.user.id;
+    return this.tablesService.openTableCommand(id, openDto, userId, companyId);
+  }
+
+  @Post(':id/items')
+  async addItemsToTableCommand(
+    @Param('id') id: string,
+    @Body() itemsDto: AddItemsTableOrderDto,
+    @Request() req: any,
+  ) {
+    const companyId = req.user.companyId;
+    return this.tablesService.addItemsToTableCommand(id, itemsDto, companyId);
+  }
+
+  @Post(':id/close')
+  async closeTableCommand(
+    @Param('id') id: string,
+    @Body() closeDto: CloseTableOrderDto,
+    @Request() req: any,
+  ) {
+    const companyId = req.user.companyId;
+    const userId = req.user.id;
+    return this.tablesService.closeTableCommand(id, closeDto, userId, companyId);
   }
 
   @Delete(':id')

@@ -1,32 +1,64 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Table, TableStatus, TableShape } from '../../entities/table.entity';
-import { CreateTableDto, UpdateTableDto, UpdateTableStatusDto, TableQueryDto, TableResponseDto } from './dto';
+import { CreateTableDto, UpdateTableDto, UpdateTableStatusDto, TableQueryDto, TableResponseDto, OpenTableOrderDto, AddItemsTableOrderDto, CloseTableOrderDto } from './dto';
+import { OrdersService } from '../orders/orders.service';
+import { OrderChannel, OrderStatus } from '../orders/dto/create-order.dto';
+import { OrderResponseDto } from '../orders/dto/order-response.dto';
+import { UpdateOrderDto } from '../orders/dto/update-order.dto';
+import { Payment } from '../../entities/payment.entity';
 
 @Injectable()
 export class TablesService {
   constructor(
     @InjectRepository(Table)
     private readonly tableRepository: Repository<Table>,
+    @Inject(forwardRef(() => OrdersService))
+    private readonly ordersService: OrdersService,
   ) {}
 
   async create(createTableDto: CreateTableDto, companyId: string): Promise<TableResponseDto> {
-    // Verificar se já existe uma mesa com o mesmo número
+    // Verificar se já existe uma mesa com o mesmo número na mesma localização
     const existingTable = await this.tableRepository.findOne({
-      where: { number: createTableDto.name, companyId },
+      where: { 
+        name: createTableDto.name, 
+        companyId,
+        locationId: createTableDto.locationId || null
+      },
     });
 
     if (existingTable) {
-      throw new BadRequestException('Já existe uma mesa com este nome');
+      throw new BadRequestException('Já existe uma mesa com este nome nesta localização');
+    }
+
+    // Extrair campos que não são da entidade
+    const { coordinates, isAvailable, area, ...tableData } = createTableDto;
+
+    // Mapear coordinates para x e y se fornecido
+    let x = tableData.x ?? 0;
+    let y = tableData.y ?? 0;
+    if (coordinates) {
+      x = coordinates.x ?? x;
+      y = coordinates.y ?? y;
+    }
+
+    // Determinar status baseado em isAvailable
+    let status = TableStatus.AVAILABLE;
+    if (isAvailable !== undefined) {
+      status = isAvailable ? TableStatus.AVAILABLE : TableStatus.OUT_OF_SERVICE;
     }
 
     // Criar a mesa
     const table = this.tableRepository.create({
-      ...createTableDto,
+      ...tableData,
       companyId,
-      number: createTableDto.name,
-      status: TableStatus.AVAILABLE,
+      number: createTableDto.name, // number é o campo obrigatório, usar name como number
+      status,
+      x,
+      y,
+      areaId: createTableDto.areaId || null,
+      locationId: createTableDto.locationId || null,
     });
 
     const savedTable = await this.tableRepository.save(table);
@@ -52,6 +84,7 @@ export class TablesService {
   async findOne(id: string, companyId: string): Promise<TableResponseDto> {
     const table = await this.tableRepository.findOne({
       where: { id, companyId },
+      relations: ['areaRelation'],
     });
 
     if (!table) {
@@ -81,8 +114,28 @@ export class TablesService {
       }
     }
 
+    // Extrair campos que precisam de tratamento especial
+    const { coordinates, isAvailable, area, ...tableData } = updateTableDto;
+
+    // Preparar dados de atualização
+    const updateData: any = { ...tableData };
+
+    // Mapear coordinates para x e y se fornecido
+    if (coordinates) {
+      updateData.x = coordinates.x ?? tableData.x ?? table.x;
+      updateData.y = coordinates.y ?? tableData.y ?? table.y;
+    } else if (tableData.x !== undefined || tableData.y !== undefined) {
+      updateData.x = tableData.x ?? table.x;
+      updateData.y = tableData.y ?? table.y;
+    }
+
+    // Determinar status baseado em isAvailable
+    if (isAvailable !== undefined) {
+      updateData.status = isAvailable ? TableStatus.AVAILABLE : TableStatus.OUT_OF_SERVICE;
+    }
+
     // Atualizar a mesa
-    await this.tableRepository.update(id, updateTableDto);
+    await this.tableRepository.update(id, updateData);
 
     // Retornar a mesa atualizada
     return this.findOne(id, companyId);
@@ -285,6 +338,8 @@ export class TablesService {
       x: table.x,
       y: table.y,
       area: table.areaRelation?.name || null, // Usar o nome da área relacionada
+      areaId: table.areaId || null,
+      locationId: table.locationId || null,
       description: table.description,
       isActive: table.isActive,
       isSmoking: table.isSmoking,
@@ -298,6 +353,130 @@ export class TablesService {
       companyId: table.companyId,
       createdAt: table.createdAt,
       updatedAt: table.updatedAt,
+    };
+  }
+
+  async openTableCommand(
+    tableId: string,
+    dto: OpenTableOrderDto,
+    userId: string,
+    companyId: string,
+  ): Promise<{ order: OrderResponseDto; table: TableResponseDto }> {
+    const table = await this.tableRepository.findOne({ where: { id: tableId, companyId } });
+
+    if (!table) {
+      throw new NotFoundException('Mesa não encontrada');
+    }
+
+    if (table.status === TableStatus.OCCUPIED && table.currentOrderId) {
+      throw new BadRequestException('Mesa já está ocupada.');
+    }
+
+    if (table.status === TableStatus.RESERVED && !table.currentOrderId) {
+      // reserva liberada para abertura
+    } else if (table.status !== TableStatus.AVAILABLE && table.status !== TableStatus.RESERVED) {
+      throw new BadRequestException('Mesa não está disponível para abertura de comanda.');
+    }
+
+    const order = await this.ordersService.createOrder({
+      channel: OrderChannel.TABLE,
+      tableId,
+      customerId: dto.customerId,
+      numberOfPeople: dto.numberOfPeople,
+      notes: dto.notes,
+      discount: 0,
+      tax: 0,
+      orderItems: dto.items ?? [],
+    }, userId, companyId);
+
+    table.status = TableStatus.OCCUPIED;
+    table.currentOrderId = order.id;
+    table.openedAt = new Date();
+    table.currentCustomerCount = dto.numberOfPeople;
+    await this.tableRepository.save(table);
+
+    return {
+      order,
+      table: this.mapTableToResponse(table),
+    };
+  }
+
+  async addItemsToTableCommand(
+    tableId: string,
+    dto: AddItemsTableOrderDto,
+    companyId: string,
+  ): Promise<OrderResponseDto> {
+    const table = await this.tableRepository.findOne({ where: { id: tableId, companyId } });
+
+    if (!table) {
+      throw new NotFoundException('Mesa não encontrada');
+    }
+
+    if (!table.currentOrderId) {
+      throw new BadRequestException('Não existe comanda ativa para esta mesa.');
+    }
+
+    return this.ordersService.addItemsToOrder(table.currentOrderId, dto.items, companyId);
+  }
+
+  async closeTableCommand(
+    tableId: string,
+    dto: CloseTableOrderDto,
+    userId: string,
+    companyId: string,
+  ): Promise<{ order: OrderResponseDto; table: TableResponseDto; payment?: Payment | null }> {
+    const table = await this.tableRepository.findOne({ where: { id: tableId, companyId } });
+
+    if (!table) {
+      throw new NotFoundException('Mesa não encontrada');
+    }
+
+    if (!table.currentOrderId) {
+      throw new BadRequestException('Esta mesa não possui comanda aberta.');
+    }
+
+    const status = dto.status || OrderStatus.CLOSED;
+    const orderUpdate: Partial<UpdateOrderDto> = {
+      status,
+    };
+
+    if (dto.notes) {
+      orderUpdate.notes = dto.notes;
+    }
+
+    if (status === OrderStatus.CANCELLED && dto.cancellationReason) {
+      orderUpdate.cancellationReason = dto.cancellationReason;
+    }
+
+    let payment: Payment | null = null;
+
+    if (status === OrderStatus.CLOSED && dto.registerPayment) {
+      payment = await this.ordersService.registerQuickPayment(
+        table.currentOrderId,
+        companyId,
+        userId,
+        dto.paymentMethod,
+        dto.paymentAmount,
+      );
+    }
+
+    const order = await this.ordersService.updateOrder(
+      table.currentOrderId,
+      orderUpdate,
+      userId,
+      companyId,
+    );
+
+    table.status = TableStatus.AVAILABLE;
+    table.currentOrderId = null;
+    table.currentCustomerCount = 0;
+    table.openedAt = null;
+    await this.tableRepository.save(table);
+
+    return {
+      order,
+      table: this.mapTableToResponse(table),
+      payment: payment ?? undefined,
     };
   }
 }

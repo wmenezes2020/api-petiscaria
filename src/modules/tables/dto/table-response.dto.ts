@@ -8,6 +8,8 @@ export class TableResponseDto {
   x?: number;
   y?: number;
   area?: string;
+  areaId?: string;
+  locationId?: string;
   description?: string;
   isActive: boolean;
   isSmoking: boolean;

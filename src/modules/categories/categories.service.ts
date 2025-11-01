@@ -12,23 +12,13 @@ export class CategoriesService {
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto, companyId: string): Promise<CategoryResponseDto> {
-    const { parentId, ...rest } = createCategoryDto;
-
-    let parentCategory: Category | undefined = undefined;
-    if (parentId) {
-      parentCategory = await this.categoryRepository.findOne({ where: { id: parentId, companyId } });
-      if (!parentCategory) {
-        throw new NotFoundException('Categoria pai não encontrada');
-      }
-    }
+    const { ...rest } = createCategoryDto as any;
 
     const category = new Category();
     Object.assign(category, {
       ...rest,
       companyId,
-      parent: parentCategory,
-      sortOrder: rest.order || 0,
-      order: rest.order || 0,
+      sortOrder: rest.order || rest.sortOrder || 0,
     });
 
     const savedCategory = await this.categoryRepository.save(category);
@@ -36,26 +26,33 @@ export class CategoriesService {
   }
 
   async findAll(query: CategoryQueryDto, companyId: string): Promise<{ categories: CategoryResponseDto[]; total: number }> {
-    const queryBuilder = this.buildQueryBuilder(query, companyId);
-    
-    const [categories, total] = await queryBuilder
-      .skip((query.page - 1) * query.limit)
-      .take(query.limit)
-      .getManyAndCount();
+    try {
+      const queryBuilder = this.buildQueryBuilder(query, companyId);
+      
+      // Garantir valores padrão seguros para paginação
+      const page = query.page || 1;
+      const limit = query.limit || 20;
+      const skip = Math.max(0, (page - 1) * limit);
+      
+      const [categories, total] = await queryBuilder
+        .skip(skip)
+        .take(limit)
+        .getManyAndCount();
 
-    const categoryResponses = categories.map(category => this.mapCategoryToResponse(category));
-    return { categories: categoryResponses, total };
+      const categoryResponses = categories.map(category => this.mapCategoryToResponse(category));
+      return { categories: categoryResponses, total };
+    } catch (error) {
+      console.error('Erro ao buscar categorias:', error);
+      throw new BadRequestException('Erro ao buscar categorias. Verifique os parâmetros da consulta.');
+    }
   }
   
   async findTree(companyId: string): Promise<CategoryResponseDto[]> {
     const categories = await this.categoryRepository.find({
       where: { companyId },
-      relations: ['parent', 'children'],
-      order: { order: 'ASC', sortOrder: 'ASC' }
+      order: { sortOrder: 'ASC' }
     });
-    
-    const rootCategories = categories.filter(cat => !cat.parent);
-    return rootCategories.map(cat => this.mapCategoryToResponse(cat));
+    return categories.map(cat => this.mapCategoryToResponse(cat));
   }
 
 
@@ -78,14 +75,13 @@ export class CategoriesService {
       throw new NotFoundException('Categoria não encontrada');
     }
     
-    const { parentId, ...rest } = updateCategoryDto;
-    
-    if (parentId && parentId !== (category.parent?.id || null)) {
-        const parentCategory = await this.categoryRepository.findOne({ where: { id: parentId, companyId } });
-        if (!parentCategory) {
-            throw new NotFoundException('Categoria pai não encontrada');
-        }
-        category.parent = parentCategory;
+    const { order, ...rest } = updateCategoryDto as any;
+
+    if (order !== undefined) {
+      category.sortOrder = order;
+    }
+    if (rest.sortOrder !== undefined) {
+      category.sortOrder = rest.sortOrder;
     }
 
     Object.assign(category, rest);
@@ -104,7 +100,7 @@ export class CategoriesService {
       throw new NotFoundException('Categoria não encontrada');
     }
 
-    await this.categoryRepository.softRemove(category);
+    await this.categoryRepository.remove(category);
   }
 
   private buildQueryBuilder(query: CategoryQueryDto, companyId: string): SelectQueryBuilder<Category> {
@@ -122,22 +118,14 @@ export class CategoriesService {
     if (query.isActive !== undefined) {
       queryBuilder.andWhere('category.isActive = :isActive', { isActive: query.isActive });
     }
-    
-    if (query.parentId) {
-        if (query.parentId === 'null') {
-            queryBuilder.andWhere('category.parentId IS NULL');
-        } else {
-            queryBuilder.andWhere('category.parentId = :parentId', { parentId: query.parentId });
-        }
-    }
-
-
+ 
+ 
     const sortBy = query.sortBy || 'name';
     const sortOrder = query.sortOrder || 'ASC';
     
     // Validar que o campo existe na entidade Category
     // Removido 'order' da lista pois não existe como coluna no banco
-    const allowedSortFields = ['name', 'sortOrder', 'createdAt', 'updatedAt', 'isActive', 'isVisible'];
+    const allowedSortFields = ['name', 'sortOrder', 'createdAt', 'updatedAt', 'isActive'];
     const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'name';
     
     queryBuilder.orderBy(`category.${validSortBy}`, sortOrder);
@@ -152,15 +140,15 @@ export class CategoriesService {
       description: category.description,
       color: category.color,
       image: category.image,
-      order: category.order,
+      icon: category.icon,
+      isFeatured: category.isFeatured,
+      order: category.sortOrder,
       isActive: category.isActive,
-      isVisible: category.isVisible,
       companyId: category.companyId,
-      parentId: category.parent ? category.parent.id : null,
-      children: category.children ? category.children.map(child => this.mapCategoryToResponse(child)) : [],
+      metadata: category.metadata as any,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
-    };
+    } as any;
   }
 }
 

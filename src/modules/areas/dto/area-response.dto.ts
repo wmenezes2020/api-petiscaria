@@ -5,7 +5,6 @@ export class AreaResponseDto {
   name: string;
   description: string;
   companyId: string;
-  locationId: string;
   createdAt: Date;
   updatedAt: Date;
 
@@ -14,7 +13,6 @@ export class AreaResponseDto {
     this.name = area.name;
     this.description = area.description;
     this.companyId = area.companyId;
-    this.locationId = area.locationId;
     this.createdAt = area.createdAt;
     this.updatedAt = area.updatedAt;
   }

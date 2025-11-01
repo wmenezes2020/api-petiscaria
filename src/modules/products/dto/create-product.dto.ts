@@ -68,11 +68,19 @@ export class CreateProductDto {
 
   @IsArray()
   @IsOptional()
+  @Transform(({ value }) => Array.isArray(value) ? value.filter((v: any) => typeof v === 'string' && v.trim() !== '') : undefined)
   images?: string[];
 
   @IsUrl()
   @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' && value.trim() === '') ? undefined : value)
   mainImage?: string;
+
+  // Compatibilidade: alguns clientes enviam imageUrl em vez de mainImage
+  @IsUrl()
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' && value.trim() === '') ? undefined : value)
+  imageUrl?: string;
 
   @IsArray()
   @IsOptional()

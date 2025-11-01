@@ -14,6 +14,7 @@ import { User } from './user.entity';
 import { OrderItem } from './order-item.entity';
 import { Location } from './location.entity';
 import { Table } from './table.entity';
+import { Customer } from './customer.entity';
 
 export enum OrderStatus {
   OPEN = 'open',
@@ -124,6 +125,10 @@ export class Order {
 
   @Column({ type: 'uuid', nullable: true })
   customerId: string;
+
+  @ManyToOne(() => Customer, (customer) => customer.orders, { nullable: true })
+  @JoinColumn({ name: 'customerId' })
+  customer: Customer;
 
   @Column({ type: 'uuid' })
   createdBy: string;

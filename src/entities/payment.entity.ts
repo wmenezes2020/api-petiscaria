@@ -10,7 +10,6 @@ import {
 } from 'typeorm';
 import { Order } from './order.entity';
 import { Customer } from './customer.entity';
-import { Location } from './location.entity';
 import { Company } from './company.entity';
 
 export enum PaymentStatus {
@@ -42,24 +41,16 @@ export enum PaymentType {
 
 @Entity('cliente_petiscaria_payments')
 @Index(['companyId', 'orderId'])
-@Index(['locationId', 'orderId'])
 @Index(['companyId', 'customerId'])
-@Index(['locationId', 'customerId'])
 @Index(['companyId', 'status'])
-@Index(['locationId', 'status'])
 @Index(['companyId', 'paymentMethod'])
-@Index(['locationId', 'paymentMethod'])
 @Index(['companyId', 'createdAt'])
-@Index(['locationId', 'createdAt'])
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ type: 'uuid' })
   companyId: string;
-
-  @Column({ type: 'uuid', nullable: true })
-  locationId: string;
 
   @Column({ type: 'uuid' })
   orderId: string;
@@ -168,10 +159,6 @@ export class Payment {
   @ManyToOne(() => Company)
   @JoinColumn({ name: 'companyId' })
   company: Company;
-
-  @ManyToOne(() => Location)
-  @JoinColumn({ name: 'locationId' })
-  location: Location;
   
   @ManyToOne(() => Order, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'orderId' })

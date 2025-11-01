@@ -80,12 +80,10 @@ async function migrateAreasLocations() {
            \`name\` varchar(255) NOT NULL,
            \`description\` text,
            \`companyId\` varchar(36) NOT NULL,
-           \`locationId\` varchar(36) NOT NULL,
            \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
            \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
            PRIMARY KEY (\`id\`),
-           KEY \`IDX_areas_companyId\` (\`companyId\`),
-           KEY \`IDX_areas_locationId\` (\`locationId\`)
+           KEY \`IDX_areas_companyId\` (\`companyId\`)
          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
       console.log('✅ Tabela areas criada');
@@ -96,16 +94,17 @@ async function migrateAreasLocations() {
       `);
 
       for (const company of companies) {
-        const [location] = await connection.execute(`
-          SELECT id FROM \`cliente_petiscaria_locations\` WHERE companyId = ?
+        // Verificar se já existe área para esta empresa
+        const [existingAreas] = await connection.execute(`
+          SELECT id FROM \`cliente_petiscaria_areas\` WHERE companyId = ?
         `, [company.id]);
 
-        if (location.length > 0) {
+        if (existingAreas.length === 0) {
           const areaId = require('crypto').randomUUID();
           await connection.execute(`
-            INSERT INTO \`cliente_petiscaria_areas\` (id, name, description, companyId, locationId) 
-            VALUES (?, ?, ?, ?, ?)
-          `, [areaId, 'Área Principal', 'Área principal do estabelecimento', company.id, location[0].id]);
+            INSERT INTO \`cliente_petiscaria_areas\` (id, name, description, companyId) 
+            VALUES (?, ?, ?, ?)
+          `, [areaId, 'Área Principal', 'Área principal do estabelecimento', company.id]);
           console.log(`🏠 Área padrão criada para empresa: ${company.id}`);
         }
       }
@@ -122,42 +121,15 @@ async function migrateAreasLocations() {
 
       const existingColumns = columns.map(col => col.COLUMN_NAME);
       
-      if (!existingColumns.includes('locationId')) {
-        console.log('➕ Adicionando coluna locationId à tabela areas...');
-        
-        // Primeiro, obter uma locationId válida
-        const [locations] = await connection.execute(`
-          SELECT id FROM \`cliente_petiscaria_locations\` LIMIT 1
-        `);
-        
-        if (locations.length > 0) {
-          const defaultLocationId = locations[0].id;
-          
-          await connection.execute(`
-            ALTER TABLE \`cliente_petiscaria_areas\` 
-            ADD COLUMN \`locationId\` varchar(36) NOT NULL DEFAULT '${defaultLocationId}'
-          `);
-          
-          // Atualizar todas as áreas existentes com a locationId padrão
-          await connection.execute(`
-            UPDATE \`cliente_petiscaria_areas\` 
-            SET \`locationId\` = '${defaultLocationId}'
-          `);
-          
-                     // Foreign Keys removidos conforme solicitado
-          
-          // Adicionar o índice
-          await connection.execute(`
-            ALTER TABLE \`cliente_petiscaria_areas\` 
-            ADD INDEX \`IDX_areas_locationId\` (\`locationId\`)
-          `);
-          
-          console.log('✅ Coluna locationId adicionada e configurada');
-        } else {
-          console.log('⚠️ Nenhuma localização encontrada para associar às áreas');
-        }
+      // REMOVIDO: A relação entre Areas e Locations foi removida.
+      // Areas agora pertencem apenas a Companies (não a Locations/Filiais).
+      // Se a coluna locationId ainda existir, deve ser removida pela migração remove-locationid-from-areas.sql
+      
+      if (existingColumns.includes('locationId')) {
+        console.log('⚠️ Coluna locationId ainda existe na tabela areas.');
+        console.log('⚠️ Execute a migração remove-locationid-from-areas.sql para removê-la.');
       } else {
-        console.log('ℹ️ Coluna locationId já existe na tabela areas');
+        console.log('✅ Tabela areas está atualizada (sem locationId)');
       }
     }
 

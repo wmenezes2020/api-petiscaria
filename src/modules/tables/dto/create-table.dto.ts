@@ -1,5 +1,5 @@
-import { IsString, IsNumber, IsOptional, IsBoolean, IsUUID, IsEnum, IsObject } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsString, IsNumber, IsOptional, IsBoolean, IsUUID, IsEnum, IsObject, ValidateNested } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export enum TableStatus {
   AVAILABLE = 'available',
@@ -16,6 +16,16 @@ export enum TableShape {
   OVAL = 'oval',
 }
 
+class CoordinatesDto {
+  @IsNumber()
+  @IsOptional()
+  x?: number = 0;
+
+  @IsNumber()
+  @IsOptional()
+  y?: number = 0;
+}
+
 export class CreateTableDto {
   @IsString()
   @Transform(({ value }) => value.trim())
@@ -23,6 +33,14 @@ export class CreateTableDto {
 
   @IsNumber()
   capacity: number;
+
+  @IsUUID()
+  @IsOptional()
+  areaId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  locationId?: string;
 
   @IsEnum(TableShape)
   @IsOptional()
@@ -36,6 +54,12 @@ export class CreateTableDto {
   @IsOptional()
   y?: number;
 
+  @IsObject()
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CoordinatesDto)
+  coordinates?: CoordinatesDto;
+
   @IsString()
   @IsOptional()
   area?: string;
@@ -47,6 +71,10 @@ export class CreateTableDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean = true;
+
+  @IsBoolean()
+  @IsOptional()
+  isAvailable?: boolean; // Será convertido para status no service
 
   @IsBoolean()
   @IsOptional()
@@ -68,6 +96,3 @@ export class CreateTableDto {
     customFields?: Record<string, any>;
   };
 }
-
-
-

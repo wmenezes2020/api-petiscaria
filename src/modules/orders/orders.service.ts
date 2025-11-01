@@ -1,16 +1,18 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder, DeepPartial } from 'typeorm';
 import { Order } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/order-item.entity';
-import { Payment } from '../../entities/payment.entity';
+import { Payment, PaymentMethod, PaymentStatus, PaymentType } from '../../entities/payment.entity';
 import { Recipe } from '../../entities/recipe.entity';
 import { Ingredient } from '../../entities/ingredient.entity';
 import { KitchenGateway } from '../kitchen/kitchen.gateway';
-import { CreateOrderDto, OrderStatus, OrderChannel } from './dto/create-order.dto';
+import { CreateOrderDto, OrderStatus, OrderChannel, OrderItemDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { OrderResponseDto } from './dto/order-response.dto';
+import { CashMovement, MovementType } from '../../entities/cash-movement.entity';
+import { CashRegister, CashRegisterStatus } from '../../entities/cash-register.entity';
 
 @Injectable()
 export class OrdersService {
@@ -25,37 +27,22 @@ export class OrdersService {
     private readonly recipeRepository: Repository<Recipe>,
     @InjectRepository(Ingredient)
     private readonly ingredientRepository: Repository<Ingredient>,
+    @InjectRepository(CashMovement)
+    private readonly cashMovementRepository: Repository<CashMovement>,
+    @InjectRepository(CashRegister)
+    private readonly cashRegisterRepository: Repository<CashRegister>,
     private readonly kitchenGateway: KitchenGateway,
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto, userId: string, companyId: string): Promise<OrderResponseDto> {
-    // REGRA DE NEGÓCIO: Baixa de estoque
-    for (const item of createOrderDto.orderItems) {
-      const recipe = await this.recipeRepository.findOne({ where: { productId: item.productId, companyId } });
-      if (recipe && recipe.ingredients) {
-        for (const recipeIngredient of recipe.ingredients) {
-          const ingredient = await this.ingredientRepository.findOne({ where: { id: recipeIngredient.ingredientId, companyId } });
-          if (ingredient) {
-            if (ingredient.currentStock < recipeIngredient.quantity * item.quantity) {
-              throw new BadRequestException(`Estoque insuficiente para o ingrediente: ${ingredient.name}`);
-            }
-            ingredient.currentStock -= recipeIngredient.quantity * item.quantity;
-            await this.ingredientRepository.save(ingredient);
-          }
-        }
-      }
-    }
-    
-    // Calcular totais
-    const subtotal = createOrderDto.orderItems.reduce((total, item) => {
-      const itemSubtotal = item.unitPrice * item.quantity;
-      const modificationsTotal = item.modifications?.reduce((modTotal, mod) => modTotal + mod.extraPrice, 0) || 0;
-      return total + itemSubtotal + modificationsTotal;
-    }, 0);
+    const orderItems = createOrderDto.orderItems ?? [];
 
-    const discount = createOrderDto.discount || 0;
-    const tax = createOrderDto.tax || 0;
-    const total = subtotal - discount + tax;
+    await this.adjustIngredientStocks(orderItems, companyId);
+
+    const subtotal = this.calculateItemsTotal(orderItems);
+    const discount = this.ensureNumber(createOrderDto.discount, 0);
+    const tax = this.ensureNumber(createOrderDto.tax, 0);
+    const total = this.ensureNumber(subtotal - discount + tax, 0);
 
     // Criar o pedido
     const order = this.orderRepository.create({
@@ -69,21 +56,19 @@ export class OrdersService {
 
     const savedOrder = await this.orderRepository.save(order);
 
-    // Criar os itens do pedido
-    const orderItems = createOrderDto.orderItems.map(item => {
-      const itemSubtotal = item.unitPrice * item.quantity;
-      const modificationsTotal = item.modifications?.reduce((modTotal, mod) => modTotal + mod.extraPrice, 0) || 0;
-      const totalPrice = itemSubtotal + modificationsTotal - (item.discount || 0) + (item.tax || 0);
-
+    const orderItemsEntities = orderItems.map(item => {
+      const totalPrice = this.calculateItemTotal(item);
       return this.orderItemRepository.create({
         ...item,
+        discount: this.ensureNumber(item.discount, 0),
+        tax: this.ensureNumber(item.tax, 0),
         totalPrice,
         orderId: savedOrder.id,
         companyId,
       });
     });
 
-    await this.orderItemRepository.save(orderItems);
+    await this.orderItemRepository.save(orderItemsEntities);
 
     const fullOrder = await this.findOne(savedOrder.id, companyId);
 
@@ -132,7 +117,7 @@ export class OrdersService {
   async findOne(id: string, companyId: string): Promise<OrderResponseDto> {
     const order = await this.orderRepository.findOne({
       where: { id, companyId },
-      relations: ['orderItems', 'createdByUser'],
+      relations: ['orderItems', 'createdByUser', 'table', 'customer'],
     });
 
     if (!order) {
@@ -160,9 +145,10 @@ export class OrdersService {
     // REGRA DE NEGÓCIO: Não permitir fechar pedido sem pagamento
     if (updateOrderDto.status === OrderStatus.CLOSED) {
       const payments = await this.paymentRepository.find({ where: { orderId: id, companyId } });
-      const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
+      const totalPaid = payments.reduce((sum, payment) => sum + this.ensureNumber(payment.amount, 0), 0);
+      const orderTotal = this.ensureNumber(order.total, 0);
 
-      if (totalPaid < order.total) {
+      if (totalPaid + 0.005 < orderTotal) {
         throw new BadRequestException('Não é possível fechar o pedido, pois o valor total ainda não foi pago.');
       }
     }
@@ -290,7 +276,7 @@ export class OrdersService {
   async getOrdersByStatus(status: OrderStatus, companyId: string): Promise<OrderResponseDto[]> {
     const orders = await this.orderRepository.find({
       where: { status, companyId },
-      relations: ['orderItems'],
+      relations: ['orderItems', 'table', 'customer', 'createdByUser'],
       order: { createdAt: 'ASC' },
     });
 
@@ -312,11 +298,13 @@ export class OrdersService {
       where: { orderId },
     });
 
-    const subtotal = orderItems.reduce((total, item) => total + item.totalPrice, 0);
-    
+    const subtotal = orderItems.reduce((total, item) => total + this.ensureNumber(item.totalPrice, 0), 0);
+
     const order = await this.orderRepository.findOne({ where: { id: orderId } });
     if (order) {
-      const total = subtotal - order.discount + order.tax;
+      const discount = this.ensureNumber(order.discount, 0);
+      const tax = this.ensureNumber(order.tax, 0);
+      const total = this.ensureNumber(subtotal - discount + tax, 0);
       await this.orderRepository.update(orderId, { subtotal, total });
     }
   }
@@ -326,6 +314,8 @@ export class OrdersService {
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.orderItems', 'orderItems')
       .leftJoinAndSelect('order.createdByUser', 'createdByUser')
+      .leftJoinAndSelect('order.table', 'table')
+      .leftJoinAndSelect('order.customer', 'customer')
       .where('order.companyId = :companyId', { companyId });
 
     if (query.status) {
@@ -521,12 +511,268 @@ export class OrdersService {
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
       })) || [],
-      table: undefined, // Removido relacionamento table
-      customer: undefined, // Removido relacionamento customer
+      table: order.table ? {
+        id: order.table.id,
+        number: order.table.number,
+        name: order.table.name || order.table.number,
+      } : undefined,
+      customer: order.customer ? {
+        id: order.customer.id,
+        name: order.customer.name,
+        phone: order.customer.phone,
+      } : undefined,
       createdByUser: order.createdByUser ? {
         id: order.createdByUser.id,
         name: order.createdByUser.name,
       } : undefined,
     };
+  }
+
+  async addItemsToOrder(orderId: string, items: OrderItemDto[], companyId: string): Promise<OrderResponseDto> {
+    if (!items || items.length === 0) {
+      return this.findOne(orderId, companyId);
+    }
+
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId, companyId },
+      relations: ['orderItems'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Pedido não encontrado');
+    }
+
+    if (!order.canBeModified()) {
+      throw new BadRequestException('Este pedido não pode ser modificado');
+    }
+
+    await this.adjustIngredientStocks(items, companyId);
+
+    const newOrderItems = items.map(item => {
+      const totalPrice = this.calculateItemTotal(item);
+      return this.orderItemRepository.create({
+        ...item,
+        discount: item.discount ?? 0,
+        tax: item.tax ?? 0,
+        totalPrice,
+        orderId: order.id,
+        companyId,
+      });
+    });
+
+    await this.orderItemRepository.save(newOrderItems);
+
+    const additionalSubtotal = this.calculateItemsTotal(items);
+    const currentSubtotal = this.ensureNumber(order.subtotal, 0);
+    const currentDiscount = this.ensureNumber(order.discount, 0);
+    const currentTax = this.ensureNumber(order.tax, 0);
+
+    const subtotal = this.ensureNumber(currentSubtotal + additionalSubtotal, 0);
+    const total = this.ensureNumber(subtotal - currentDiscount + currentTax, 0);
+
+    await this.orderRepository.update(order.id, {
+      subtotal,
+      total,
+      updatedAt: new Date(),
+    });
+
+    return this.findOne(orderId, companyId);
+  }
+
+  private async adjustIngredientStocks(items: OrderItemDto[], companyId: string): Promise<void> {
+    if (!items || items.length === 0) {
+      return;
+    }
+
+    for (const item of items) {
+      if (!item.productId) {
+        continue;
+      }
+
+      const recipe = await this.recipeRepository.findOne({ where: { productId: item.productId, companyId } });
+      if (recipe && recipe.ingredients) {
+        for (const recipeIngredient of recipe.ingredients) {
+          const ingredient = await this.ingredientRepository.findOne({ where: { id: recipeIngredient.ingredientId, companyId } });
+          if (ingredient) {
+            const totalRequired = this.ensureNumber(recipeIngredient.quantity, 0) * this.ensureNumber(item.quantity, 0);
+            if (ingredient.currentStock < totalRequired) {
+              throw new BadRequestException(`Estoque insuficiente para o ingrediente: ${ingredient.name}`);
+            }
+            ingredient.currentStock -= totalRequired;
+            await this.ingredientRepository.save(ingredient);
+          }
+        }
+      }
+    }
+  }
+
+  private calculateItemsTotal(items: OrderItemDto[]): number {
+    return items.reduce((total, item) => total + this.calculateItemTotal(item), 0);
+  }
+
+  private calculateItemTotal(item: OrderItemDto): number {
+    const unitPrice = this.ensureNumber(item.unitPrice, 0);
+    const quantity = this.ensureNumber(item.quantity, 0);
+    const itemSubtotal = unitPrice * quantity;
+    const modificationsTotal = (item.modifications ?? []).reduce((sum, mod) => sum + this.ensureNumber(mod.extraPrice, 0), 0);
+    const discount = this.ensureNumber(item.discount, 0);
+    const tax = this.ensureNumber(item.tax, 0);
+    return this.ensureNumber(itemSubtotal + modificationsTotal - discount + tax, 0);
+  }
+
+  private ensureNumber(value: any, fallback = 0): number {
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : fallback;
+    }
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    return fallback;
+  }
+
+  async registerQuickPayment(
+    orderId: string,
+    companyId: string,
+    userId: string,
+    paymentMethod?: PaymentMethod,
+    paymentAmount?: number,
+  ): Promise<Payment | null> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId, companyId },
+      relations: ['orderItems', 'table'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Pedido não encontrado');
+    }
+
+    const computedItemsTotal = this.calculateItemsTotal(order.orderItems as any);
+    const discountValue = this.ensureNumber(order.discount, 0);
+    const taxValue = this.ensureNumber(order.tax, 0);
+    const computedTotal = this.ensureNumber(
+      computedItemsTotal - discountValue + taxValue,
+      0,
+    );
+
+    let total = this.ensureNumber(order.total, computedTotal);
+    if (total <= 0 && computedTotal > 0) {
+      total = computedTotal;
+    }
+
+    const storedSubtotal = this.ensureNumber(order.subtotal, computedItemsTotal);
+
+    if (
+      Math.abs(storedSubtotal - computedItemsTotal) > 0.01 ||
+      Math.abs(this.ensureNumber(order.total, 0) - total) > 0.01
+    ) {
+      await this.orderRepository.update(orderId, {
+        subtotal: computedItemsTotal,
+        total,
+      });
+    }
+
+    const paidAmount = await this.getTotalPaid(orderId, companyId);
+
+    let outstanding = this.ensureNumber(total - paidAmount, 0);
+    if (outstanding <= 0) {
+      return null;
+    }
+
+    let amountToPay = paymentAmount !== undefined ? this.ensureNumber(paymentAmount, 0) : outstanding;
+    if (amountToPay <= 0) {
+      return null;
+    }
+
+    if (amountToPay > outstanding) {
+      amountToPay = outstanding;
+    }
+
+    const method = paymentMethod ?? PaymentMethod.CASH;
+
+    const payment = this.paymentRepository.create({
+      companyId,
+      orderId,
+      customerId: order.customerId ?? undefined,
+      amount: amountToPay,
+      netAmount: amountToPay,
+      discount: 0,
+      tax: 0,
+      fee: 0,
+      paymentMethod: method,
+      paymentType: PaymentType.FULL,
+      status: PaymentStatus.COMPLETED,
+      metadata: {
+        customFields: {
+          generatedBy: 'quick-payment',
+          generatedAt: new Date().toISOString(),
+          paymentMethod: method,
+          requestedAmount: paymentAmount,
+        },
+      },
+      processedAt: new Date(),
+    } as DeepPartial<Payment>);
+
+    const savedPayment = await this.paymentRepository.save(payment);
+
+    const openRegister = await this.cashRegisterRepository.findOne({
+      where: { companyId, status: CashRegisterStatus.OPEN },
+      order: { openedAt: 'DESC' },
+    });
+
+    if (openRegister) {
+      const lastMovement = await this.cashMovementRepository.findOne({
+        where: { companyId, cashRegisterId: openRegister.id },
+        order: { createdAt: 'DESC' },
+      });
+
+      const previousBalance = this.ensureNumber(
+        lastMovement?.newBalance ?? lastMovement?.amount ?? openRegister.expectedBalance ?? openRegister.openingBalance,
+        this.ensureNumber(openRegister.openingBalance, 0),
+      );
+
+      const newBalance = this.ensureNumber(previousBalance + amountToPay, previousBalance);
+
+      const movement = this.cashMovementRepository.create({
+        companyId,
+        cashRegisterId: openRegister.id,
+        userId,
+        movementType: MovementType.SALE,
+        amount: amountToPay,
+        previousBalance,
+        newBalance,
+        paymentMethod: method,
+        orderId,
+        paymentId: savedPayment.id,
+        description: order.table?.number
+          ? `Pagamento da mesa ${order.table.number}`
+          : 'Pagamento rápido de comanda',
+        notes: order.notes ?? undefined,
+        metadata: {
+          customFields: {
+            source: 'table-command',
+            paymentMethod: method,
+            tableId: order.tableId,
+          },
+        },
+      } as DeepPartial<CashMovement>);
+
+      await this.cashMovementRepository.save(movement);
+
+      await this.cashRegisterRepository.update(openRegister.id, {
+        expectedBalance: newBalance,
+        updatedAt: new Date(),
+      });
+    }
+
+    return savedPayment;
+  }
+
+  private async getTotalPaid(orderId: string, companyId: string): Promise<number> {
+    const payments = await this.paymentRepository.find({
+      where: { orderId, companyId, status: PaymentStatus.COMPLETED },
+    });
+
+    return payments.reduce((sum, payment) => sum + this.ensureNumber(payment.amount, 0), 0);
   }
 }

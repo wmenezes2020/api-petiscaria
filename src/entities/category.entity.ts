@@ -11,12 +11,10 @@ import {
 } from 'typeorm';
 import { Company } from './company.entity';
 import { Product } from './product.entity';
-import { Location } from './location.entity';
 
 @Entity('cliente_petiscaria_categories')
-@Index(['name', 'locationId'], { unique: true })
+@Index(['name', 'companyId'], { unique: true })
 @Index(['companyId'])
-@Index(['locationId'])
 export class Category {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -36,27 +34,11 @@ export class Category {
   @Column({ type: 'int', default: 0 })
   sortOrder: number;
 
-  @Column({ type: 'int', default: 0 })
-  order: number;
-
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({ type: 'boolean', default: true })
-  isVisible: boolean;
-
   @Column({ type: 'boolean', default: false })
   isFeatured: boolean;
-
-  @Column({ type: 'uuid', nullable: true })
-  parentId: string;
-
-  @ManyToOne(() => Category, { nullable: true })
-  @JoinColumn({ name: 'parentId' })
-  parent: Category;
-
-  @OneToMany(() => Category, (category) => category.parent)
-  children: Category[];
 
   @Column({ type: 'varchar', length: 50, nullable: true })
   icon: string;
@@ -76,16 +58,10 @@ export class Category {
   @Column({ type: 'uuid' })
   companyId: string;
 
-  @Column({ type: 'uuid', nullable: true })
-  locationId: string;
-
   @ManyToOne(() => Company, (company) => company.categories)
   @JoinColumn({ name: 'companyId' })
   company: Company;
 
-  @ManyToOne(() => Location)
-  @JoinColumn({ name: 'locationId' })
-  location: Location;
 
   @OneToMany(() => Product, (product) => product.category)
   products: Product[];

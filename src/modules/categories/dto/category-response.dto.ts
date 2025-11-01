@@ -4,11 +4,10 @@ export class CategoryResponseDto {
   description?: string;
   color: string;
   image?: string;
+  icon?: string;
+  isFeatured?: boolean;
   order: number;
   isActive: boolean;
-  isVisible: boolean;
-  parentId?: string;
-  parentName?: string;
   metadata?: {
     features?: string[];
     notes?: string;
@@ -18,7 +17,6 @@ export class CategoryResponseDto {
   createdAt: Date;
   updatedAt: Date;
   productCount?: number;
-  children?: CategoryResponseDto[];
 }
 
 

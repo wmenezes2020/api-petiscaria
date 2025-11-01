@@ -8,10 +8,12 @@ import { Payment } from '../../entities/payment.entity';
 import { Recipe } from '../../entities/recipe.entity';
 import { Ingredient } from '../../entities/ingredient.entity';
 import { KitchenModule } from '../kitchen/kitchen.module';
+import { CashMovement } from '../../entities/cash-movement.entity';
+import { CashRegister } from '../../entities/cash-register.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem, Payment, Recipe, Ingredient]),
+    TypeOrmModule.forFeature([Order, OrderItem, Payment, Recipe, Ingredient, CashMovement, CashRegister]),
     KitchenModule,
   ],
   controllers: [OrdersController],

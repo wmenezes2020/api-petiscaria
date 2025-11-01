@@ -1,8 +1,9 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsUrl, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsNumber, IsUrl, IsObject, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateCategoryDto {
   @IsString()
+  @IsNotEmpty()
   @Transform(({ value }) => value.trim())
   name: string;
 
@@ -28,11 +29,9 @@ export class CreateCategoryDto {
 
   @IsBoolean()
   @IsOptional()
-  isVisible?: boolean = true;
+  // removido: isVisible não existe na tabela
 
-  @IsString()
-  @IsOptional()
-  parentId?: string;
+  // removido: parentId não existe na tabela
 
   @IsObject()
   @IsOptional()
