@@ -17,18 +17,19 @@ export class RecipesService {
     private readonly ingredientRepository: Repository<Ingredient>,
   ) {}
 
-  async create(createRecipeDto: CreateRecipeDto, companyId: string): Promise<RecipeResponseDto> {
-    const product = await this.productRepository.findOne({ where: { id: createRecipeDto.productId, companyId } });
+  async create(createRecipeDto: CreateRecipeDto, companyId: string, tenantId: string): Promise<RecipeResponseDto> {
+    const product = await this.productRepository.findOne({ where: { id: createRecipeDto.productId, companyId, tenantId } });
     if (!product) {
       throw new NotFoundException('Produto não encontrado');
     }
 
-    const ingredients = await this.calculateIngredientsCost(createRecipeDto.ingredients, companyId);
+    const ingredients = await this.calculateIngredientsCost(createRecipeDto.ingredients, companyId, tenantId);
     const totalCost = ingredients.reduce((sum, item) => sum + item.cost * item.quantity, 0);
 
     const recipe = this.recipeRepository.create({
       ...createRecipeDto,
       companyId,
+      tenantId,
       ingredients,
       totalCost,
       costPerServing: totalCost / (createRecipeDto.servings || 1),
@@ -38,9 +39,10 @@ export class RecipesService {
     return this.mapToResponseDto(savedRecipe);
   }
 
-  async findAll(query: RecipeQueryDto, companyId: string): Promise<{ data: RecipeResponseDto[], total: number }> {
+  async findAll(query: RecipeQueryDto, companyId: string, tenantId: string): Promise<{ data: RecipeResponseDto[], total: number }> {
     const qb = this.recipeRepository.createQueryBuilder('recipe')
       .where('recipe.companyId = :companyId', { companyId })
+      .andWhere('recipe.tenantId = :tenantId', { tenantId })
       .leftJoinAndSelect('recipe.product', 'product');
 
     if (query.search) {
@@ -60,16 +62,16 @@ export class RecipesService {
     return { data, total };
   }
 
-  async findOne(id: string, companyId: string): Promise<RecipeResponseDto> {
-    const recipe = await this.recipeRepository.findOne({ where: { id, companyId }, relations: ['product'] });
+  async findOne(id: string, companyId: string, tenantId: string): Promise<RecipeResponseDto> {
+    const recipe = await this.recipeRepository.findOne({ where: { id, companyId, tenantId }, relations: ['product'] });
     if (!recipe) {
       throw new NotFoundException('Receita não encontrada');
     }
     return this.mapToResponseDto(recipe);
   }
 
-  async update(id: string, updateRecipeDto: UpdateRecipeDto, companyId: string): Promise<RecipeResponseDto> {
-    const recipe = await this.recipeRepository.findOne({ where: { id, companyId } });
+  async update(id: string, updateRecipeDto: UpdateRecipeDto, companyId: string, tenantId: string): Promise<RecipeResponseDto> {
+    const recipe = await this.recipeRepository.findOne({ where: { id, companyId, tenantId } });
     if (!recipe) {
       throw new NotFoundException('Receita não encontrada');
     }
@@ -78,7 +80,7 @@ export class RecipesService {
     let totalCost = recipe.totalCost;
 
     if (updateRecipeDto.ingredients) {
-      ingredients = await this.calculateIngredientsCost(updateRecipeDto.ingredients, companyId);
+      ingredients = await this.calculateIngredientsCost(updateRecipeDto.ingredients, companyId, tenantId);
       totalCost = ingredients.reduce((sum, item) => sum + item.cost * item.quantity, 0);
     }
     
@@ -92,22 +94,22 @@ export class RecipesService {
     });
 
     const updatedRecipe = await this.recipeRepository.save(recipe);
-    return this.findOne(updatedRecipe.id, companyId);
+    return this.findOne(updatedRecipe.id, companyId, tenantId);
   }
 
-  async remove(id: string, companyId: string): Promise<void> {
-    const result = await this.recipeRepository.delete({ id, companyId });
+  async remove(id: string, companyId: string, tenantId: string): Promise<void> {
+    const result = await this.recipeRepository.delete({ id, companyId, tenantId });
     if (result.affected === 0) {
       throw new NotFoundException('Receita não encontrada');
     }
   }
 
-  private async calculateIngredientsCost(ingredientsDto: any[], companyId: string) {
+  private async calculateIngredientsCost(ingredientsDto: any[], companyId: string, tenantId: string) {
     const ingredientIds = ingredientsDto.map(i => i.ingredientId);
-    const ingredients = await this.ingredientRepository.findByIds(ingredientIds);
+    const ingredients = await this.ingredientRepository.find({ where: { id: ingredientIds as any, companyId, tenantId } });
 
     return ingredientsDto.map(dto => {
-      const ingredient = ingredients.find(i => i.id === dto.ingredientId && i.companyId === companyId);
+      const ingredient = ingredients.find(i => i.id === dto.ingredientId && i.companyId === companyId && i.tenantId === tenantId);
       if (!ingredient) {
         throw new NotFoundException(`Ingrediente com ID ${dto.ingredientId} não encontrado`);
       }
@@ -120,7 +122,7 @@ export class RecipesService {
 
   private async mapToResponseDto(recipe: Recipe): Promise<RecipeResponseDto> {
     const ingredientIds = recipe.ingredients.map(i => i.ingredientId);
-    const ingredients = await this.ingredientRepository.findByIds(ingredientIds);
+    const ingredients = await this.ingredientRepository.find({ where: { id: ingredientIds as any, companyId: recipe.companyId, tenantId: recipe.tenantId } });
 
     return {
       id: recipe.id,

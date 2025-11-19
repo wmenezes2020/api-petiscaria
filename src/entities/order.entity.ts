@@ -15,6 +15,7 @@ import { OrderItem } from './order-item.entity';
 import { Location } from './location.entity';
 import { Table } from './table.entity';
 import { Customer } from './customer.entity';
+import { Tenant } from './tenant.entity';
 
 export enum OrderStatus {
   OPEN = 'open',
@@ -33,6 +34,7 @@ export enum OrderChannel {
 }
 
 @Entity('cliente_petiscaria_orders')
+@Index(['tenantId'])
 @Index(['companyId'])
 @Index(['locationId'])
 @Index(['status'])
@@ -42,6 +44,9 @@ export enum OrderChannel {
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ 
     type: 'enum',
@@ -149,6 +154,10 @@ export class Order {
   @ManyToOne(() => Company)
   @JoinColumn({ name: 'companyId' })
   company: Company;
+
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
 
   @ManyToOne(() => Location)
   @JoinColumn({ name: 'locationId' })

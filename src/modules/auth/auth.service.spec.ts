@@ -26,6 +26,7 @@ describe('AuthService', () => {
   // --- Mock Data (Updated to include all properties and methods from entities) ---
   const mockUser: User = {
     id: '1',
+    tenantId: 'tenant-1',
     name: 'Test User',
     email: 'test@example.com',
     phone: null,
@@ -56,10 +57,15 @@ describe('AuthService', () => {
       canManagePayments: true,
     },
     companyId: '1',
+    roleId: null,
     locationId: null,
-    company: null, // Will be mocked separately or fetched via relations
+    company: null, // Will be mocked separately ou fetched via relations
     location: null,
     orders: [],
+    tenant: null,
+    roleEntity: null,
+    tenantMemberships: [],
+    tokens: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     // Mock methods
@@ -71,6 +77,7 @@ describe('AuthService', () => {
 
   const mockCompany: Company = {
     id: '1',
+    tenantId: 'tenant-1',
     fantasia: 'Test Company',
     razaoSocial: 'Test Company LTDA',
     documento: '12345678901234',
@@ -93,6 +100,7 @@ describe('AuthService', () => {
     active: true,
     settings: null,
     openPixConfig: null,
+    tenant: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     users: [],

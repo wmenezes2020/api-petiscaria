@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Query,
   Param,
+  Request,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CashRegisterService } from './cash-register.service';
@@ -33,8 +34,9 @@ export class CashRegisterController {
     @Body() openDto: OpenCashRegisterDto,
     @CompanyId() companyId: string,
     @UserId() userId: string,
+    @Request() req: any,
   ) {
-    return this.cashRegisterService.openCashRegister(openDto, companyId, userId);
+    return this.cashRegisterService.openCashRegister(openDto, companyId, req.user.tenantId, userId);
   }
 
   @Post('close')
@@ -43,16 +45,18 @@ export class CashRegisterController {
     @Body() closeDto: CloseCashRegisterDto,
     @CompanyId() companyId: string,
     @UserId() userId: string,
+    @Request() req: any,
   ) {
-    return this.cashRegisterService.closeCashRegister(closeDto, companyId, userId);
+    return this.cashRegisterService.closeCashRegister(closeDto, companyId, req.user.tenantId, userId);
   }
 
   @Get('current')
   @HttpCode(HttpStatus.OK)
   async getCurrent(
     @CompanyId() companyId: string,
+    @Request() req: any,
   ) {
-    return this.cashRegisterService.getCurrentCashRegister(companyId);
+    return this.cashRegisterService.getCurrentCashRegister(companyId, req.user.tenantId);
   }
 
   @Post('movements')
@@ -61,8 +65,9 @@ export class CashRegisterController {
     @Body() createDto: CreateCashMovementDto,
     @CompanyId() companyId: string,
     @UserId() userId: string,
+    @Request() req: any,
   ) {
-    return this.cashRegisterService.createMovement(createDto, companyId, userId);
+    return this.cashRegisterService.createMovement(createDto, companyId, req.user.tenantId, userId);
   }
 
   @Get(':id/movements')
@@ -71,8 +76,9 @@ export class CashRegisterController {
     @Param('id') cashRegisterId: string,
     @Query() query: CashMovementQueryDto,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ) {
-    return this.cashRegisterService.getMovements(cashRegisterId, companyId, query);
+    return this.cashRegisterService.getMovements(cashRegisterId, companyId, req.user.tenantId, query);
   }
 }
 

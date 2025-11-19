@@ -13,6 +13,7 @@ import { Order } from './order.entity';
 import { Payment } from './payment.entity';
 import { Company } from './company.entity';
 import { CashRegister } from './cash-register.entity';
+import { Tenant } from './tenant.entity';
 
 export enum MovementType {
   OPENING = 'opening',
@@ -36,13 +37,16 @@ export enum PaymentMethod {
 }
 
 @Entity('cliente_petiscaria_cash_movements')
-@Index(['companyId', 'cashRegisterId'])
-@Index(['companyId', 'movementType'])
-@Index(['companyId', 'createdAt'])
-@Index(['companyId', 'userId'])
+@Index(['tenantId', 'companyId', 'cashRegisterId'])
+@Index(['tenantId', 'companyId', 'movementType'])
+@Index(['tenantId', 'companyId', 'createdAt'])
+@Index(['tenantId', 'companyId', 'userId'])
 export class CashMovement {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ type: 'uuid' })
   companyId: string;
@@ -106,6 +110,10 @@ export class CashMovement {
   updatedAt: Date;
 
   // Relacionamentos
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
+
   @ManyToOne(() => Company)
   @JoinColumn({ name: 'companyId' })
   company: Company;

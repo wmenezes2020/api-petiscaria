@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpCode, HttpStatus, Request } from '@nestjs/common';
 import { RecipesService } from './recipes.service';
 import { CreateRecipeDto, UpdateRecipeDto, RecipeResponseDto, RecipeQueryDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -15,32 +15,32 @@ export class RecipesController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createRecipeDto: CreateRecipeDto, @CompanyId() companyId: string): Promise<RecipeResponseDto> {
-    return this.recipesService.create(createRecipeDto, companyId);
+  create(@Body() createRecipeDto: CreateRecipeDto, @CompanyId() companyId: string, @Request() req: any): Promise<RecipeResponseDto> {
+    return this.recipesService.create(createRecipeDto, companyId, req.user.tenantId);
   }
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.WAITER)
-  findAll(@Query() query: RecipeQueryDto, @CompanyId() companyId: string): Promise<{ data: RecipeResponseDto[], total: number }> {
-    return this.recipesService.findAll(query, companyId);
+  findAll(@Query() query: RecipeQueryDto, @CompanyId() companyId: string, @Request() req: any): Promise<{ data: RecipeResponseDto[], total: number }> {
+    return this.recipesService.findAll(query, companyId, req.user.tenantId);
   }
 
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.WAITER)
-  findOne(@Param('id') id: string, @CompanyId() companyId: string): Promise<RecipeResponseDto> {
-    return this.recipesService.findOne(id, companyId);
+  findOne(@Param('id') id: string, @CompanyId() companyId: string, @Request() req: any): Promise<RecipeResponseDto> {
+    return this.recipesService.findOne(id, companyId, req.user.tenantId);
   }
 
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
-  update(@Param('id') id: string, @Body() updateRecipeDto: UpdateRecipeDto, @CompanyId() companyId: string): Promise<RecipeResponseDto> {
-    return this.recipesService.update(id, updateRecipeDto, companyId);
+  update(@Param('id') id: string, @Body() updateRecipeDto: UpdateRecipeDto, @CompanyId() companyId: string, @Request() req: any): Promise<RecipeResponseDto> {
+    return this.recipesService.update(id, updateRecipeDto, companyId, req.user.tenantId);
   }
 
   @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string, @CompanyId() companyId: string): Promise<void> {
-    return this.recipesService.remove(id, companyId);
+  remove(@Param('id') id: string, @CompanyId() companyId: string, @Request() req: any): Promise<void> {
+    return this.recipesService.remove(id, companyId, req.user.tenantId);
   }
 }

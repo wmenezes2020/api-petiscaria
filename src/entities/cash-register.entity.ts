@@ -12,6 +12,7 @@ import {
 import { Company } from './company.entity';
 import { User } from './user.entity';
 import { CashMovement } from './cash-movement.entity';
+import { Tenant } from './tenant.entity';
 
 export enum CashRegisterStatus {
   OPEN = 'open',
@@ -19,10 +20,13 @@ export enum CashRegisterStatus {
 }
 
 @Entity('cliente_petiscaria_cash_registers')
-@Index(['companyId', 'status'])
+@Index(['tenantId', 'companyId', 'status'])
 export class CashRegister {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   openingBalance: number;
@@ -63,6 +67,10 @@ export class CashRegister {
 
   @Column({ type: 'uuid', nullable: true })
   closedById: string;
+
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
 
   @ManyToOne(() => Company)
   @JoinColumn({ name: 'companyId' })

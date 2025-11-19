@@ -27,8 +27,9 @@ export class StockController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
+    const tenantId = req.user.tenantId;
     const userId = req.user.id;
-    return this.stockService.create(createStockMovementDto, companyId, userId);
+    return this.stockService.create(createStockMovementDto, companyId, tenantId, userId);
   }
 
   @Get()
@@ -37,13 +38,15 @@ export class StockController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.stockService.findAll(query, companyId);
+    const tenantId = req.user.tenantId;
+    return this.stockService.findAll(query, companyId, tenantId);
   }
 
   @Get('alerts')
   async getAlerts(@Request() req: any) {
     const companyId = req.user.companyId;
-    return this.stockService.getStockAlerts(companyId);
+    const tenantId = req.user.tenantId;
+    return this.stockService.getStockAlerts(companyId, tenantId);
   }
 
   @Get('product/:productId')
@@ -52,7 +55,8 @@ export class StockController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.stockService.getProductStock(productId, companyId);
+    const tenantId = req.user.tenantId;
+    return this.stockService.getProductStock(productId, companyId, tenantId);
   }
 
   @Get('report')
@@ -62,9 +66,10 @@ export class StockController {
     @Query('endDate') endDate: string,
   ) {
     const companyId = req.user.companyId;
+    const tenantId = req.user.tenantId;
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return this.stockService.getStockReport(companyId, start, end);
+    return this.stockService.getStockReport(companyId, tenantId, start, end);
   }
 
   @Get(':id')
@@ -73,7 +78,8 @@ export class StockController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.stockService.findOne(id, companyId);
+    const tenantId = req.user.tenantId;
+    return this.stockService.findOne(id, companyId, tenantId);
   }
 }
 

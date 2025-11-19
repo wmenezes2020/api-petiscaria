@@ -17,6 +17,7 @@ import { OrderItem } from './order-item.entity';
 import { StockMovement } from './stock-movement.entity';
 import { ModifierGroup } from './modifier-group.entity';
 import { Location } from './location.entity';
+import { Tenant } from './tenant.entity';
 
 export enum ProductStatus {
   ACTIVE = 'active',
@@ -34,14 +35,17 @@ export enum ProductType {
 }
 
 @Entity('cliente_petiscaria_products')
-@Index(['name', 'locationId'])
-@Index(['categoryId'])
-@Index(['companyId'])
-@Index(['locationId'])
-@Index(['status'])
+@Index(['tenantId', 'companyId'])
+@Index(['tenantId', 'companyId', 'name', 'locationId'])
+@Index(['tenantId', 'companyId', 'categoryId'])
+@Index(['tenantId', 'companyId', 'locationId'])
+@Index(['tenantId', 'companyId', 'status'])
 export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
@@ -215,6 +219,10 @@ export class Product {
 
   @Column({ type: 'uuid', nullable: true })
   categoryId: string;
+
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
 
   @ManyToOne(() => Company, (company) => company.products)
   @JoinColumn({ name: 'companyId' })

@@ -30,7 +30,8 @@ export class IngredientsController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.ingredientsService.create(createIngredientDto, companyId);
+    const tenantId = req.user.tenantId;
+    return this.ingredientsService.create(createIngredientDto, companyId, tenantId);
   }
 
   @Get()
@@ -39,13 +40,15 @@ export class IngredientsController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.ingredientsService.findAll(query, companyId);
+    const tenantId = req.user.tenantId;
+    return this.ingredientsService.findAll(query, companyId, tenantId);
   }
 
   @Get('alerts')
   async getStockAlerts(@Request() req: any) {
     const companyId = req.user.companyId;
-    return this.ingredientsService.getStockAlerts(companyId);
+    const tenantId = req.user.tenantId;
+    return this.ingredientsService.getStockAlerts(companyId, tenantId);
   }
 
   @Get('category/:categoryId')
@@ -54,7 +57,8 @@ export class IngredientsController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.ingredientsService.getIngredientsByCategory(categoryId, companyId);
+    const tenantId = req.user.tenantId;
+    return this.ingredientsService.getIngredientsByCategory(categoryId, companyId, tenantId);
   }
 
   @Get(':id')
@@ -63,7 +67,8 @@ export class IngredientsController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.ingredientsService.findOne(id, companyId);
+    const tenantId = req.user.tenantId;
+    return this.ingredientsService.findOne(id, companyId, tenantId);
   }
 
   @Patch(':id')
@@ -73,7 +78,8 @@ export class IngredientsController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.ingredientsService.update(id, updateIngredientDto, companyId);
+    const tenantId = req.user.tenantId;
+    return this.ingredientsService.update(id, updateIngredientDto, companyId, tenantId);
   }
 
   @Delete(':id')
@@ -83,6 +89,7 @@ export class IngredientsController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.ingredientsService.remove(id, companyId);
+    const tenantId = req.user.tenantId;
+    return this.ingredientsService.remove(id, companyId, tenantId);
   }
 }

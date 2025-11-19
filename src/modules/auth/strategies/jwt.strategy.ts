@@ -20,12 +20,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     try {
       const user = await this.authService.validateUser(payload.sub);
+      const permissions = this.authService.getUserPermissions(user);
       return {
         id: user.id,
         email: user.email,
         role: user.role,
         companyId: user.companyId,
-        permissions: user.permissions,
+        tenantId: user.tenantId,
+        permissions,
       };
     } catch (error) {
       throw new UnauthorizedException('Usuário não encontrado ou inativo');

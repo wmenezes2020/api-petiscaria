@@ -10,6 +10,7 @@ export class LoginResponseDto {
     role: string;
     companyId: string;
     companyName: string;
+    tenantId: string;
   };
 }
 

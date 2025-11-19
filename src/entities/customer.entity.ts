@@ -12,6 +12,7 @@ import {
 import { Company } from './company.entity';
 import { Order } from './order.entity';
 import { Location } from './location.entity';
+import { Tenant } from './tenant.entity';
 
 export enum CustomerStatus {
   ACTIVE = 'active',
@@ -26,15 +27,18 @@ export enum CustomerType {
 }
 
 @Entity('cliente_petiscaria_customers')
-@Index(['companyId'])
-@Index(['locationId']) // Adicionando índice para a filial de origem/preferida
-@Index(['email', 'companyId'], { unique: true })
-@Index(['phone', 'companyId'])
-@Index(['cpf', 'companyId'], { unique: true })
-@Index(['cnpj', 'companyId'], { unique: true })
+@Index(['tenantId', 'companyId'])
+@Index(['tenantId', 'companyId', 'locationId'])
+@Index(['tenantId', 'companyId', 'email'], { unique: true })
+@Index(['tenantId', 'companyId', 'phone'])
+@Index(['tenantId', 'companyId', 'cpf'], { unique: true })
+@Index(['tenantId', 'companyId', 'cnpj'], { unique: true })
 export class Customer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
@@ -142,6 +146,10 @@ export class Customer {
   updatedAt: Date;
 
   // Relacionamentos
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
+
   @ManyToOne(() => Company)
   @JoinColumn({ name: 'companyId' })
   company: Company;

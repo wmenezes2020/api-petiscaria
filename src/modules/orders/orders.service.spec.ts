@@ -77,6 +77,8 @@ describe('OrdersService', () => {
     sentToKitchenAt: null,
   } as any;
 
+const tenantId = 'tenant-1';
+
   const mockRepositories = {
     findOne: jest.fn(),
     find: jest.fn(),
@@ -166,7 +168,7 @@ describe('OrdersService', () => {
         createdByUser: { id: 'user-1', name: 'Test User' },
       });
 
-      const result = await service.createOrder(createOrderDto, 'user-1', 'company-1');
+      const result = await service.createOrder(createOrderDto, 'user-1', 'company-1', tenantId);
 
       expect(result).toBeDefined();
       expect(mockRepositories.save).toHaveBeenCalled();
@@ -177,7 +179,7 @@ describe('OrdersService', () => {
       mockRepositories.findOne.mockResolvedValue(null);
 
       await expect(
-        service.findOne('non-existent', 'company-1')
+        service.findOne('non-existent', 'company-1', tenantId)
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -189,7 +191,7 @@ describe('OrdersService', () => {
         orderItems: [mockOrderItem],
       });
 
-      const result = await service.findOne('1', 'company-1');
+      const result = await service.findOne('1', 'company-1', tenantId);
 
       expect(result).toBeDefined();
       expect(result.id).toBe('1');
@@ -198,9 +200,9 @@ describe('OrdersService', () => {
     it('should throw NotFoundException if order not found', async () => {
       mockRepositories.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.findOne('non-existent', 'company-1')
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent', 'company-1', tenantId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -216,7 +218,7 @@ describe('OrdersService', () => {
       ]);
       mockRepositories.update.mockResolvedValue(undefined);
 
-      await service.updateOrder('1', updateOrderDto, 'user-1', 'company-1');
+      await service.updateOrder('1', updateOrderDto, 'user-1', 'company-1', tenantId);
 
       expect(mockRepositories.update).toHaveBeenCalled();
     });
@@ -226,7 +228,7 @@ describe('OrdersService', () => {
       mockRepositories.findOne.mockResolvedValue(lockedOrder);
 
       await expect(
-        service.updateOrder('1', updateOrderDto, 'user-1', 'company-1')
+        service.updateOrder('1', updateOrderDto, 'user-1', 'company-1', tenantId)
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -238,7 +240,7 @@ describe('OrdersService', () => {
       ]);
 
       await expect(
-        service.updateOrder('1', { status: OrderStatus.CLOSED }, 'user-1', 'company-1')
+        service.updateOrder('1', { status: OrderStatus.CLOSED }, 'user-1', 'company-1', tenantId),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -248,7 +250,7 @@ describe('OrdersService', () => {
       mockRepositories.findOne.mockResolvedValue(mockOrder);
       mockRepositories.update.mockResolvedValue(undefined);
 
-      await service.deleteOrder('1', 'company-1');
+      await service.deleteOrder('1', 'company-1', tenantId);
 
       expect(mockRepositories.update).toHaveBeenCalledWith('1', {
         status: OrderStatus.CANCELLED,
@@ -261,7 +263,7 @@ describe('OrdersService', () => {
       mockRepositories.findOne.mockResolvedValue(lockedOrder);
 
       await expect(
-        service.deleteOrder('1', 'company-1')
+        service.deleteOrder('1', 'company-1', tenantId)
       ).rejects.toThrow(BadRequestException);
     });
   });

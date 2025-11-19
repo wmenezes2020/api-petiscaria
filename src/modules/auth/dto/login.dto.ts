@@ -13,6 +13,14 @@ export class LoginDto {
   companyId?: string;
 
   @IsOptional()
+  @IsString()
+  tenantId?: string;
+
+  @IsOptional()
+  @IsString()
+  twoFactorCode?: string;
+
+  @IsOptional()
   rememberMe?: boolean;
 }
 

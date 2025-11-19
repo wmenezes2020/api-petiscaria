@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Company } from './company.entity';
 import { Location } from './location.entity';
+import { Tenant } from './tenant.entity';
 
 export enum IngredientType {
   RAW_MATERIAL = 'raw_material',
@@ -34,15 +35,18 @@ export enum IngredientUnit {
 }
 
 @Entity('cliente_petiscaria_ingredients')
-@Index(['companyId', 'categoryId'])
-@Index(['locationId', 'categoryId'])
-@Index(['companyId', 'ingredientType'])
-@Index(['locationId', 'ingredientType'])
-@Index(['companyId', 'name'])
-@Index(['locationId', 'name'])
+@Index(['tenantId', 'companyId', 'categoryId'])
+@Index(['tenantId', 'companyId', 'locationId', 'categoryId'])
+@Index(['tenantId', 'companyId', 'ingredientType'])
+@Index(['tenantId', 'companyId', 'locationId', 'ingredientType'])
+@Index(['tenantId', 'companyId', 'name'])
+@Index(['tenantId', 'companyId', 'locationId', 'name'])
 export class Ingredient {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ type: 'uuid' })
   companyId: string;
@@ -132,6 +136,10 @@ export class Ingredient {
   updatedAt: Date;
 
   // Relacionamentos
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
+
   @ManyToOne(() => Company, (company) => company.ingredients)
   @JoinColumn({ name: 'companyId' })
   company: Company;

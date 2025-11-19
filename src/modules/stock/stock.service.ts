@@ -17,10 +17,10 @@ export class StockService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  async create(createStockMovementDto: CreateStockMovementDto, companyId: string, userId: string): Promise<StockMovementResponseDto> {
+  async create(createStockMovementDto: CreateStockMovementDto, companyId: string, tenantId: string, userId: string): Promise<StockMovementResponseDto> {
     // Verificar se o produto existe
     const product = await this.productRepository.findOne({
-      where: { id: createStockMovementDto.productId, companyId },
+      where: { id: createStockMovementDto.productId, companyId, tenantId },
     });
 
     if (!product) {
@@ -34,6 +34,7 @@ export class StockService {
     const movement = this.stockMovementRepository.create({
       ...createStockMovementDto,
       companyId,
+      tenantId,
       totalCost,
     });
 
@@ -45,8 +46,8 @@ export class StockService {
     return this.mapMovementToResponse(savedMovement, product);
   }
 
-  async findAll(query: StockQueryDto, companyId: string): Promise<{ movements: StockMovementResponseDto[]; total: number }> {
-    const queryBuilder = this.buildQueryBuilder(query, companyId);
+  async findAll(query: StockQueryDto, companyId: string, tenantId: string): Promise<{ movements: StockMovementResponseDto[]; total: number }> {
+    const queryBuilder = this.buildQueryBuilder(query, companyId, tenantId);
     
     const [movements, total] = await queryBuilder
       .skip((query.page - 1) * query.limit)
@@ -56,7 +57,7 @@ export class StockService {
     const movementResponses = await Promise.all(
       movements.map(async movement => {
         const product = await this.productRepository.findOne({
-          where: { id: movement.productId },
+          where: { id: movement.productId, tenantId },
           select: ['id', 'name', 'sku', 'stockQuantity', 'minStockLevel', 'maxStockLevel'],
         });
         return this.mapMovementToResponse(movement, product);
@@ -66,9 +67,9 @@ export class StockService {
     return { movements: movementResponses, total };
   }
 
-  async findOne(id: string, companyId: string): Promise<StockMovementResponseDto> {
+  async findOne(id: string, companyId: string, tenantId: string): Promise<StockMovementResponseDto> {
     const movement = await this.stockMovementRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!movement) {
@@ -76,14 +77,14 @@ export class StockService {
     }
 
     const product = await this.productRepository.findOne({
-      where: { id: movement.productId },
+      where: { id: movement.productId, tenantId },
       select: ['id', 'name', 'sku', 'stockQuantity', 'minStockLevel', 'maxStockLevel'],
     });
 
     return this.mapMovementToResponse(movement, product);
   }
 
-  async getProductStock(productId: string, companyId: string): Promise<{
+  async getProductStock(productId: string, companyId: string, tenantId: string): Promise<{
     product: any;
     currentStock: number;
     movements: StockMovementResponseDto[];
@@ -91,7 +92,7 @@ export class StockService {
     overStock: boolean;
   }> {
     const product = await this.productRepository.findOne({
-      where: { id: productId, companyId },
+      where: { id: productId, companyId, tenantId },
     });
 
     if (!product) {
@@ -99,7 +100,7 @@ export class StockService {
     }
 
     const movements = await this.stockMovementRepository.find({
-      where: { productId, companyId },
+      where: { productId, companyId, tenantId },
       order: { createdAt: 'DESC' },
       take: 10,
     });
@@ -123,7 +124,7 @@ export class StockService {
     };
   }
 
-  async getStockAlerts(companyId: string): Promise<{
+  async getStockAlerts(companyId: string, tenantId: string): Promise<{
     lowStock: any[];
     overStock: any[];
     expiredProducts: any[];
@@ -132,6 +133,7 @@ export class StockService {
      const lowStock = await this.productRepository
        .createQueryBuilder('product')
        .where('product.companyId = :companyId', { companyId })
+       .andWhere('product.tenantId = :tenantId', { tenantId })
        .andWhere('product.stockQuantity <= product.minStockLevel')
        .select(['id', 'name', 'sku', 'stockQuantity', 'minStockLevel'])
        .getMany();
@@ -140,6 +142,7 @@ export class StockService {
      const overStock = await this.productRepository
        .createQueryBuilder('product')
        .where('product.companyId = :companyId', { companyId })
+       .andWhere('product.tenantId = :tenantId', { tenantId })
        .andWhere('product.stockQuantity >= product.maxStockLevel')
        .select(['id', 'name', 'sku', 'stockQuantity', 'maxStockLevel'])
        .getMany();
@@ -152,6 +155,7 @@ export class StockService {
 
   async getStockReport(
     companyId: string,
+    tenantId: string,
     startDate: Date,
     endDate: Date,
   ): Promise<{
@@ -167,6 +171,7 @@ export class StockService {
          const movements = await this.stockMovementRepository.find({
        where: {
          companyId,
+         tenantId,
          createdAt: Between(startDate, endDate),
        },
      });
@@ -261,10 +266,11 @@ export class StockService {
     await this.productRepository.update(product.id, { stockQuantity: newStock });
   }
 
-  private buildQueryBuilder(query: StockQueryDto, companyId: string): SelectQueryBuilder<StockMovement> {
+  private buildQueryBuilder(query: StockQueryDto, companyId: string, tenantId: string): SelectQueryBuilder<StockMovement> {
     const queryBuilder = this.stockMovementRepository
       .createQueryBuilder('movement')
-      .where('movement.companyId = :companyId', { companyId });
+      .where('movement.companyId = :companyId', { companyId })
+      .andWhere('movement.tenantId = :tenantId', { tenantId });
 
     if (query.search) {
       queryBuilder.andWhere(

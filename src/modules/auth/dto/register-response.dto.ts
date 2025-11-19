@@ -7,6 +7,7 @@ export class RegisterResponseDto {
     role: string;
     companyId: string;
     companyName: string;
+    tenantId: string;
   };
   accessToken: string;
   refreshToken: string;

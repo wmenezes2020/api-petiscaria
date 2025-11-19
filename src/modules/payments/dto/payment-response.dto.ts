@@ -2,6 +2,7 @@ import { PaymentStatus, PaymentMethod, PaymentType } from '../../../entities/pay
 
 export class PaymentResponseDto {
   id: string;
+  tenantId: string;
   companyId: string;
   orderId: string;
   customerId?: string;

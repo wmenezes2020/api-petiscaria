@@ -11,6 +11,8 @@ export { OrderItem } from './order-item.entity';
 // Entidades de clientes e mesas
 export { Customer, CustomerStatus, CustomerType } from './customer.entity';
 export { Table, TableStatus, TableShape } from './table.entity';
+export { Tenant, TenantStatus } from './tenant.entity';
+export { TenantUser } from './tenant-user.entity';
 
 // Entidades de estoque
 export { StockMovement, StockMovementType, StockMovementReason } from './stock-movement.entity';
@@ -33,3 +35,6 @@ export { CashMovement, MovementType } from './cash-movement.entity';
 
 // Entidades de notificações
 export { Notification, NotificationType, NotificationPriority, NotificationStatus } from './notification.entity';
+export { Role } from './role.entity';
+export { Permission } from './permission.entity';
+export { UserToken } from './user-token.entity';

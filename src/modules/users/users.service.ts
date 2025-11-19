@@ -5,12 +5,15 @@ import { User, UserRole, UserStatus } from '../../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcryptjs';
+import { Company } from '../../entities/company.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Company)
+    private readonly companyRepository: Repository<Company>,
   ) {}
 
   async create(createUserDto: CreateUserDto, companyId: string): Promise<User> {
@@ -25,6 +28,11 @@ export class UsersService {
       throw new BadRequestException('Email já está em uso');
     }
 
+    const company = await this.companyRepository.findOne({ where: { id: companyId } });
+    if (!company) {
+      throw new BadRequestException('Empresa não encontrada');
+    }
+
     // Criptografar senha
     const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -32,6 +40,7 @@ export class UsersService {
       ...rest,
       email,
       password: hashedPassword,
+      tenantId: company.tenantId,
       companyId,
       status: UserStatus.ACTIVE,
     });

@@ -28,9 +28,11 @@ import { LocationsModule } from './modules/locations/locations.module';
 import { ModifiersModule } from './modules/modifiers/modifiers.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { HealthModule } from './modules/health/health.module';
+import { TenantsModule } from './modules/tenants/tenants.module';
 
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from './modules/auth/guards/permissions.guard';
 
 import { validationSchema } from './config/env.validation';
 import { jwtConfig } from './config/jwt.config';
@@ -68,6 +70,7 @@ import { typeOrmConfig } from './config/typeorm.config';
     ModifiersModule,
     AuditModule,
     HealthModule,
+    TenantsModule,
   ],
   providers: [
     {
@@ -77,6 +80,10 @@ import { typeOrmConfig } from './config/typeorm.config';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
     },
   ],
 })

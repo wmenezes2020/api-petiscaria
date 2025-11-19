@@ -14,7 +14,7 @@ export class IngredientsService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  async create(createIngredientDto: CreateIngredientDto, companyId: string): Promise<IngredientResponseDto> {
+  async create(createIngredientDto: CreateIngredientDto, companyId: string, tenantId: string): Promise<IngredientResponseDto> {
     // Verificar se a categoria existe
     const category = await this.categoryRepository.findOne({
       where: { id: createIngredientDto.categoryId, companyId },
@@ -27,7 +27,7 @@ export class IngredientsService {
     // Verificar se já existe um insumo com o mesmo SKU
     if (createIngredientDto.sku) {
       const existingIngredient = await this.ingredientRepository.findOne({
-        where: { sku: createIngredientDto.sku, companyId },
+        where: { sku: createIngredientDto.sku, companyId, tenantId },
       });
 
       if (existingIngredient) {
@@ -39,14 +39,15 @@ export class IngredientsService {
     const ingredient = this.ingredientRepository.create({
       ...createIngredientDto,
       companyId,
+      tenantId,
     });
 
     const savedIngredient = await this.ingredientRepository.save(ingredient);
     return this.mapIngredientToResponse(savedIngredient, category);
   }
 
-  async findAll(query: IngredientQueryDto, companyId: string): Promise<{ ingredients: IngredientResponseDto[]; total: number }> {
-    const queryBuilder = this.buildQueryBuilder(query, companyId);
+  async findAll(query: IngredientQueryDto, companyId: string, tenantId: string): Promise<{ ingredients: IngredientResponseDto[]; total: number }> {
+    const queryBuilder = this.buildQueryBuilder(query, companyId, tenantId);
     
     const [ingredients, total] = await queryBuilder
       .skip((query.page - 1) * query.limit)
@@ -66,9 +67,9 @@ export class IngredientsService {
     return { ingredients: ingredientResponses, total };
   }
 
-  async findOne(id: string, companyId: string): Promise<IngredientResponseDto> {
+  async findOne(id: string, companyId: string, tenantId: string): Promise<IngredientResponseDto> {
     const ingredient = await this.ingredientRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!ingredient) {
@@ -83,9 +84,9 @@ export class IngredientsService {
     return this.mapIngredientToResponse(ingredient, category);
   }
 
-  async update(id: string, updateIngredientDto: UpdateIngredientDto, companyId: string): Promise<IngredientResponseDto> {
+  async update(id: string, updateIngredientDto: UpdateIngredientDto, companyId: string, tenantId: string): Promise<IngredientResponseDto> {
     const ingredient = await this.ingredientRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!ingredient) {
@@ -106,7 +107,7 @@ export class IngredientsService {
     // Verificar se já existe um insumo com o mesmo SKU (se for alterado)
     if (updateIngredientDto.sku && updateIngredientDto.sku !== ingredient.sku) {
       const existingIngredient = await this.ingredientRepository.findOne({
-        where: { sku: updateIngredientDto.sku, companyId },
+        where: { sku: updateIngredientDto.sku, companyId, tenantId },
       });
 
       if (existingIngredient) {
@@ -118,12 +119,12 @@ export class IngredientsService {
     await this.ingredientRepository.update(id, updateIngredientDto);
 
     // Retornar o insumo atualizado
-    return this.findOne(id, companyId);
+    return this.findOne(id, companyId, tenantId);
   }
 
-  async remove(id: string, companyId: string): Promise<void> {
+  async remove(id: string, companyId: string, tenantId: string): Promise<void> {
     const ingredient = await this.ingredientRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!ingredient) {
@@ -134,7 +135,7 @@ export class IngredientsService {
     await this.ingredientRepository.update(id, { isActive: false });
   }
 
-  async getStockAlerts(companyId: string): Promise<{
+  async getStockAlerts(companyId: string, tenantId: string): Promise<{
     lowStock: IngredientResponseDto[];
     overStock: IngredientResponseDto[];
     totalValue: number;
@@ -143,6 +144,7 @@ export class IngredientsService {
     const lowStock = await this.ingredientRepository
       .createQueryBuilder('ingredient')
       .where('ingredient.companyId = :companyId', { companyId })
+      .andWhere('ingredient.tenantId = :tenantId', { tenantId })
       .andWhere('ingredient.isActive = :isActive', { isActive: true })
       .andWhere('ingredient.currentStock <= ingredient.minStock')
       .getMany();
@@ -151,6 +153,7 @@ export class IngredientsService {
     const overStock = await this.ingredientRepository
       .createQueryBuilder('ingredient')
       .where('ingredient.companyId = :companyId', { companyId })
+      .andWhere('ingredient.tenantId = :tenantId', { tenantId })
       .andWhere('ingredient.isActive = :isActive', { isActive: true })
       .andWhere('ingredient.currentStock >= ingredient.maxStock')
       .getMany();
@@ -160,6 +163,7 @@ export class IngredientsService {
       .createQueryBuilder('ingredient')
       .select('SUM(ingredient.currentStock * ingredient.unitCost)', 'totalValue')
       .where('ingredient.companyId = :companyId', { companyId })
+      .andWhere('ingredient.tenantId = :tenantId', { tenantId })
       .andWhere('ingredient.isActive = :isActive', { isActive: true })
       .getRawOne();
 
@@ -184,9 +188,9 @@ export class IngredientsService {
     };
   }
 
-  async getIngredientsByCategory(categoryId: string, companyId: string): Promise<IngredientResponseDto[]> {
+  async getIngredientsByCategory(categoryId: string, companyId: string, tenantId: string): Promise<IngredientResponseDto[]> {
     const ingredients = await this.ingredientRepository.find({
-      where: { categoryId, companyId, isActive: true },
+      where: { categoryId, companyId, tenantId, isActive: true },
       order: { name: 'ASC' },
     });
 
@@ -198,10 +202,11 @@ export class IngredientsService {
     return Promise.all(ingredients.map(ingredient => this.mapIngredientToResponse(ingredient, category)));
   }
 
-  private buildQueryBuilder(query: IngredientQueryDto, companyId: string): SelectQueryBuilder<Ingredient> {
+  private buildQueryBuilder(query: IngredientQueryDto, companyId: string, tenantId: string): SelectQueryBuilder<Ingredient> {
     const queryBuilder = this.ingredientRepository
       .createQueryBuilder('ingredient')
       .where('ingredient.companyId = :companyId', { companyId })
+      .andWhere('ingredient.tenantId = :tenantId', { tenantId })
       .andWhere('ingredient.isActive = :isActive', { isActive: true });
 
     if (query.search) {

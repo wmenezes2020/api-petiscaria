@@ -11,6 +11,7 @@ import {
 import { Company } from './company.entity';
 import { Product } from './product.entity';
 import { Location } from './location.entity';
+import { Tenant } from './tenant.entity';
 
 export enum StockMovementType {
   IN = 'in',
@@ -34,15 +35,18 @@ export enum StockMovementReason {
 }
 
 @Entity('cliente_petiscaria_stock_movements')
-@Index(['companyId'])
-@Index(['locationId'])
-@Index(['productId'])
-@Index(['type'])
-@Index(['reason'])
-@Index(['date'])
+@Index(['tenantId', 'companyId'])
+@Index(['tenantId', 'companyId', 'locationId'])
+@Index(['tenantId', 'companyId', 'productId'])
+@Index(['tenantId', 'companyId', 'type'])
+@Index(['tenantId', 'companyId', 'reason'])
+@Index(['tenantId', 'companyId', 'date'])
 export class StockMovement {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ 
     type: 'varchar',
@@ -120,6 +124,10 @@ export class StockMovement {
   updatedAt: Date;
 
   // Relacionamentos
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
+
   @ManyToOne(() => Company, (company) => company.stockMovements)
   @JoinColumn({ name: 'companyId' })
   company: Company;

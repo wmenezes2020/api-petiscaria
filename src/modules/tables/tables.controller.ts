@@ -33,7 +33,7 @@ export class TablesController {
     @Request() req: any,
   ): Promise<TableResponseDto> {
     const companyId = req.user.companyId;
-    return this.tablesService.create(createTableDto, companyId);
+    return this.tablesService.create(createTableDto, companyId, req.user.tenantId);
   }
 
   @Get()
@@ -42,7 +42,7 @@ export class TablesController {
     @Request() req: any,
   ): Promise<{ tables: TableResponseDto[]; total: number }> {
     const companyId = req.user.companyId;
-    return this.tablesService.findAll(query, companyId);
+    return this.tablesService.findAll(query, companyId, req.user.tenantId);
   }
 
   @Get('area/:area')
@@ -51,22 +51,13 @@ export class TablesController {
     @Request() req: any,
   ): Promise<TableResponseDto[]> {
     const companyId = req.user.companyId;
-    return this.tablesService.findByArea(area, companyId);
+    return this.tablesService.findByArea(area, companyId, req.user.tenantId);
   }
 
   @Get('stats')
   async getTableStats(@Request() req: any) {
     const companyId = req.user.companyId;
-    const tables = await this.tablesService.findAll({ page: 1, limit: 1000 }, companyId);
-    
-    const occupied = tables.tables.filter(table => table.status === 'occupied').length;
-    const available = tables.tables.filter(table => table.status === 'available').length;
-    
-    return {
-      occupied,
-      available,
-      total: tables.total,
-    };
+    return this.tablesService.getTableStats(companyId, req.user.tenantId);
   }
 
   @Get(':id')
@@ -75,7 +66,7 @@ export class TablesController {
     @Request() req: any,
   ): Promise<TableResponseDto> {
     const companyId = req.user.companyId;
-    return this.tablesService.findOne(id, companyId);
+    return this.tablesService.findOne(id, companyId, req.user.tenantId);
   }
 
   @Patch(':id')
@@ -85,7 +76,7 @@ export class TablesController {
     @Request() req: any,
   ): Promise<TableResponseDto> {
     const companyId = req.user.companyId;
-    return this.tablesService.update(id, updateTableDto, companyId);
+    return this.tablesService.update(id, updateTableDto, companyId, req.user.tenantId);
   }
 
   @Patch(':id/status')
@@ -95,7 +86,7 @@ export class TablesController {
     @Request() req: any,
   ): Promise<TableResponseDto> {
     const companyId = req.user.companyId;
-    return this.tablesService.updateStatus(id, updateStatusDto, companyId);
+    return this.tablesService.updateStatus(id, updateStatusDto, companyId, req.user.tenantId);
   }
 
   @Post(':id/reserve')
@@ -111,7 +102,7 @@ export class TablesController {
     @Request() req: any,
   ): Promise<TableResponseDto> {
     const companyId = req.user.companyId;
-    return this.tablesService.reserveTable(id, companyId, reservationData);
+    return this.tablesService.reserveTable(id, companyId, req.user.tenantId, reservationData);
   }
 
   @Post(':id/open')
@@ -122,7 +113,7 @@ export class TablesController {
   ) {
     const companyId = req.user.companyId;
     const userId = req.user.id;
-    return this.tablesService.openTableCommand(id, openDto, userId, companyId);
+    return this.tablesService.openTableCommand(id, openDto, userId, companyId, req.user.tenantId);
   }
 
   @Post(':id/items')
@@ -132,7 +123,7 @@ export class TablesController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.tablesService.addItemsToTableCommand(id, itemsDto, companyId);
+    return this.tablesService.addItemsToTableCommand(id, itemsDto, companyId, req.user.tenantId);
   }
 
   @Post(':id/close')
@@ -143,7 +134,7 @@ export class TablesController {
   ) {
     const companyId = req.user.companyId;
     const userId = req.user.id;
-    return this.tablesService.closeTableCommand(id, closeDto, userId, companyId);
+    return this.tablesService.closeTableCommand(id, closeDto, userId, companyId, req.user.tenantId);
   }
 
   @Delete(':id')
@@ -153,7 +144,7 @@ export class TablesController {
     @Request() req: any,
   ): Promise<void> {
     const companyId = req.user.companyId;
-    return this.tablesService.remove(id, companyId);
+    return this.tablesService.remove(id, companyId, req.user.tenantId);
   }
 }
 

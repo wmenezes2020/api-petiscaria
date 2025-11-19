@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Order } from './order.entity';
 import { Product } from './product.entity';
+import { Tenant } from './tenant.entity';
 
 @Entity('cliente_petiscaria_order_items')
 @Index(['orderId'])
@@ -18,6 +19,9 @@ import { Product } from './product.entity';
 export class OrderItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ type: 'varchar', length: 255 })
   productName: string;
@@ -108,6 +112,10 @@ export class OrderItem {
   @ManyToOne(() => Product, (product) => product.orderItems)
   @JoinColumn({ name: 'productId' })
   product: Product;
+
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
 
   // Métodos auxiliares
   getSubtotal(): number {

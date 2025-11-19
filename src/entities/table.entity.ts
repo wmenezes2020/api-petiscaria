@@ -13,6 +13,7 @@ import { Company } from './company.entity';
 import { Order } from './order.entity';
 import { Area } from './area.entity';
 import { Location } from './location.entity';
+import { Tenant } from './tenant.entity';
 
 export enum TableStatus {
   AVAILABLE = 'available',
@@ -30,6 +31,7 @@ export enum TableShape {
 }
 
 @Entity('cliente_petiscaria_tables')
+@Index(['tenantId'])
 @Index(['companyId'])
 @Index(['locationId'])
 @Index(['areaId'])
@@ -38,6 +40,9 @@ export enum TableShape {
 export class Table {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ type: 'varchar', length: 10 })
   number: string;
@@ -143,6 +148,10 @@ export class Table {
   @ManyToOne(() => Company)
   @JoinColumn({ name: 'companyId' })
   company: Company;
+
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
 
   @ManyToOne(() => Location)
   @JoinColumn({ name: 'locationId' })

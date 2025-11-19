@@ -22,10 +22,14 @@ export class PaymentsService {
     private readonly customerRepository: Repository<Customer>,
   ) {}
 
-  async createPayment(createPaymentDto: CreatePaymentDto, companyId: string): Promise<PaymentResponseDto> {
+  async createPayment(
+    createPaymentDto: CreatePaymentDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<PaymentResponseDto> {
     // Verificar se o pedido existe e pertence à empresa
     const order = await this.orderRepository.findOne({
-      where: { id: createPaymentDto.orderId, companyId },
+      where: { id: createPaymentDto.orderId, companyId, tenantId },
     });
 
     if (!order) {
@@ -45,7 +49,7 @@ export class PaymentsService {
 
     // Verificar se já existe um pagamento para este pedido
     const existingPayment = await this.paymentRepository.findOne({
-      where: { orderId: createPaymentDto.orderId, companyId },
+      where: { orderId: createPaymentDto.orderId, companyId, tenantId },
     });
 
     if (existingPayment) {
@@ -64,6 +68,7 @@ export class PaymentsService {
     const payment = this.paymentRepository.create({
       ...createPaymentDto,
       companyId,
+      tenantId,
       netAmount,
       status: PaymentStatus.PENDING,
       installments: createPaymentDto.installments || 1,
@@ -73,8 +78,12 @@ export class PaymentsService {
     return this.mapPaymentToResponse(savedPayment, order);
   }
 
-  async findAll(query: PaymentQueryDto, companyId: string): Promise<{ payments: PaymentResponseDto[]; total: number }> {
-    const queryBuilder = this.buildQueryBuilder(query, companyId);
+  async findAll(
+    query: PaymentQueryDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<{ payments: PaymentResponseDto[]; total: number }> {
+    const queryBuilder = this.buildQueryBuilder(query, companyId, tenantId);
     
     const [payments, total] = await queryBuilder
       .skip((query.page - 1) * query.limit)
@@ -94,9 +103,9 @@ export class PaymentsService {
     return { payments: paymentResponses, total };
   }
 
-  async findOne(id: string, companyId: string): Promise<PaymentResponseDto> {
+  async findOne(id: string, companyId: string, tenantId: string): Promise<PaymentResponseDto> {
     const payment = await this.paymentRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!payment) {
@@ -104,30 +113,35 @@ export class PaymentsService {
     }
 
     const order = await this.orderRepository.findOne({
-      where: { id: payment.orderId },
+      where: { id: payment.orderId, companyId, tenantId },
       select: ['id', 'orderNumber', 'total', 'status'],
     });
 
     return this.mapPaymentToResponse(payment, order);
   }
 
-  async findByOrderId(orderId: string, companyId: string): Promise<PaymentResponseDto[]> {
+  async findByOrderId(orderId: string, companyId: string, tenantId: string): Promise<PaymentResponseDto[]> {
     const payments = await this.paymentRepository.find({
-      where: { orderId, companyId },
+      where: { orderId, companyId, tenantId },
       order: { createdAt: 'DESC' },
     });
 
     const order = await this.orderRepository.findOne({
-      where: { id: orderId },
+      where: { id: orderId, companyId, tenantId },
       select: ['id', 'orderNumber', 'total', 'status'],
     });
 
     return Promise.all(payments.map(payment => this.mapPaymentToResponse(payment, order)));
   }
 
-  async updatePayment(id: string, updatePaymentDto: UpdatePaymentDto, companyId: string): Promise<PaymentResponseDto> {
+  async updatePayment(
+    id: string,
+    updatePaymentDto: UpdatePaymentDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<PaymentResponseDto> {
     const payment = await this.paymentRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!payment) {
@@ -153,12 +167,17 @@ export class PaymentsService {
     await this.paymentRepository.update(id, updatePaymentDto);
 
     // Retornar o pagamento atualizado
-    return this.findOne(id, companyId);
+    return this.findOne(id, companyId, tenantId);
   }
 
-  async processPayment(id: string, processPaymentDto: ProcessPaymentDto, companyId: string): Promise<PaymentResponseDto> {
+  async processPayment(
+    id: string,
+    processPaymentDto: ProcessPaymentDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<PaymentResponseDto> {
     const payment = await this.paymentRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!payment) {
@@ -203,12 +222,17 @@ export class PaymentsService {
       paidAt: new Date(),
     });
 
-    return this.findOne(id, companyId);
+    return this.findOne(id, companyId, tenantId);
   }
 
-  async cancelPayment(id: string, companyId: string, reason?: string): Promise<PaymentResponseDto> {
+  async cancelPayment(
+    id: string,
+    companyId: string,
+    tenantId: string,
+    reason?: string,
+  ): Promise<PaymentResponseDto> {
     const payment = await this.paymentRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!payment) {
@@ -224,12 +248,17 @@ export class PaymentsService {
       notes: reason ? `${payment.notes || ''}\nCancelado: ${reason}`.trim() : payment.notes,
     });
 
-    return this.findOne(id, companyId);
+    return this.findOne(id, companyId, tenantId);
   }
 
-  async refundPayment(id: string, refundDto: RefundPaymentDto, companyId: string): Promise<PaymentResponseDto> {
+  async refundPayment(
+    id: string,
+    refundDto: RefundPaymentDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<PaymentResponseDto> {
     const payment = await this.paymentRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!payment) {
@@ -261,10 +290,10 @@ export class PaymentsService {
       notes: `${payment.notes || ''}\nReembolso: ${refundDto.reason || 'Solicitado pelo cliente'}`.trim(),
     });
 
-    return this.findOne(id, companyId);
+    return this.findOne(id, companyId, tenantId);
   }
 
-  async getPaymentStats(companyId: string): Promise<{
+  async getPaymentStats(companyId: string, tenantId: string): Promise<{
     total: number;
     pending: number;
     completed: number;
@@ -280,13 +309,21 @@ export class PaymentsService {
     byMethod: Array<{ method: string; count: number; amount: number }>;
     byStatus: Array<{ status: string; count: number; amount: number }>;
   }> {
-    const total = await this.paymentRepository.count({ where: { companyId } });
-    const pending = await this.paymentRepository.count({ where: { companyId, status: PaymentStatus.PENDING } });
-    const completed = await this.paymentRepository.count({ where: { companyId, status: PaymentStatus.COMPLETED } });
-    const failed = await this.paymentRepository.count({ where: { companyId, status: PaymentStatus.FAILED } });
-    const cancelled = await this.paymentRepository.count({ where: { companyId, status: PaymentStatus.CANCELLED } });
+    const total = await this.paymentRepository.count({ where: { companyId, tenantId } });
+    const pending = await this.paymentRepository.count({
+      where: { companyId, tenantId, status: PaymentStatus.PENDING },
+    });
+    const completed = await this.paymentRepository.count({
+      where: { companyId, tenantId, status: PaymentStatus.COMPLETED },
+    });
+    const failed = await this.paymentRepository.count({
+      where: { companyId, tenantId, status: PaymentStatus.FAILED },
+    });
+    const cancelled = await this.paymentRepository.count({
+      where: { companyId, tenantId, status: PaymentStatus.CANCELLED },
+    });
     const refunded = await this.paymentRepository.count({ 
-      where: { companyId, status: PaymentStatus.REFUNDED } 
+      where: { companyId, tenantId, status: PaymentStatus.REFUNDED } 
     });
 
     const amountStats = await this.paymentRepository
@@ -298,6 +335,7 @@ export class PaymentsService {
       .addSelect('SUM(payment.netAmount)', 'totalNetAmount')
       .addSelect('SUM(payment.refundedAmount)', 'totalRefunded')
       .where('payment.companyId = :companyId', { companyId })
+      .andWhere('payment.tenantId = :tenantId', { tenantId })
       .getRawOne();
 
     const byMethod = await this.paymentRepository
@@ -306,6 +344,7 @@ export class PaymentsService {
       .addSelect('COUNT(*)', 'count')
       .addSelect('SUM(payment.netAmount)', 'amount')
       .where('payment.companyId = :companyId', { companyId })
+      .andWhere('payment.tenantId = :tenantId', { tenantId })
       .andWhere('payment.status = :status', { status: PaymentStatus.COMPLETED })
       .groupBy('payment.paymentMethod')
       .getRawMany();
@@ -349,10 +388,15 @@ export class PaymentsService {
     return amount - discount + fee + tax;
   }
 
-  private buildQueryBuilder(query: PaymentQueryDto, companyId: string): SelectQueryBuilder<Payment> {
+  private buildQueryBuilder(
+    query: PaymentQueryDto,
+    companyId: string,
+    tenantId: string,
+  ): SelectQueryBuilder<Payment> {
     const queryBuilder = this.paymentRepository
       .createQueryBuilder('payment')
-      .where('payment.companyId = :companyId', { companyId });
+      .where('payment.companyId = :companyId', { companyId })
+      .andWhere('payment.tenantId = :tenantId', { tenantId });
 
     if (query.search) {
       queryBuilder.andWhere(
@@ -413,6 +457,7 @@ export class PaymentsService {
   private mapPaymentToResponse(payment: Payment, order?: Order): PaymentResponseDto {
     return {
       id: payment.id,
+      tenantId: payment.tenantId,
       companyId: payment.companyId,
       orderId: payment.orderId,
       customerId: payment.customerId,

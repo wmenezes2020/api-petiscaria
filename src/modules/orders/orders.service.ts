@@ -34,10 +34,15 @@ export class OrdersService {
     private readonly kitchenGateway: KitchenGateway,
   ) {}
 
-  async createOrder(createOrderDto: CreateOrderDto, userId: string, companyId: string): Promise<OrderResponseDto> {
+  async createOrder(
+    createOrderDto: CreateOrderDto,
+    userId: string,
+    companyId: string,
+    tenantId: string,
+  ): Promise<OrderResponseDto> {
     const orderItems = createOrderDto.orderItems ?? [];
 
-    await this.adjustIngredientStocks(orderItems, companyId);
+    await this.adjustIngredientStocks(orderItems, companyId, tenantId);
 
     const subtotal = this.calculateItemsTotal(orderItems);
     const discount = this.ensureNumber(createOrderDto.discount, 0);
@@ -50,6 +55,7 @@ export class OrdersService {
       subtotal,
       total,
       companyId,
+      tenantId,
       createdBy: userId,
       status: OrderStatus.OPEN,
     });
@@ -65,12 +71,13 @@ export class OrdersService {
         totalPrice,
         orderId: savedOrder.id,
         companyId,
+        tenantId,
       });
     });
 
     await this.orderItemRepository.save(orderItemsEntities);
 
-    const fullOrder = await this.findOne(savedOrder.id, companyId);
+    const fullOrder = await this.findOne(savedOrder.id, companyId, tenantId);
 
     // Notificar KDS
     this.kitchenGateway.notifyNewOrder(companyId, {
@@ -99,8 +106,12 @@ export class OrdersService {
     return fullOrder;
   }
 
-  async findAll(query: OrderQueryDto, companyId: string): Promise<{ orders: OrderResponseDto[]; total: number }> {
-    const queryBuilder = this.buildQueryBuilder(query, companyId);
+  async findAll(
+    query: OrderQueryDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<{ orders: OrderResponseDto[]; total: number }> {
+    const queryBuilder = this.buildQueryBuilder(query, companyId, tenantId);
     
     const [orders, total] = await queryBuilder
       .skip((query.page - 1) * query.limit)
@@ -114,9 +125,9 @@ export class OrdersService {
     return { orders: orderResponses, total };
   }
 
-  async findOne(id: string, companyId: string): Promise<OrderResponseDto> {
+  async findOne(id: string, companyId: string, tenantId: string): Promise<OrderResponseDto> {
     const order = await this.orderRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
       relations: ['orderItems', 'createdByUser', 'table', 'customer'],
     });
 
@@ -127,9 +138,15 @@ export class OrdersService {
     return this.mapOrderToResponse(order);
   }
 
-  async updateOrder(id: string, updateOrderDto: UpdateOrderDto, userId: string, companyId: string): Promise<OrderResponseDto> {
+  async updateOrder(
+    id: string,
+    updateOrderDto: UpdateOrderDto,
+    userId: string,
+    companyId: string,
+    tenantId: string,
+  ): Promise<OrderResponseDto> {
     const order = await this.orderRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
       relations: ['orderItems'],
     });
 
@@ -144,7 +161,9 @@ export class OrdersService {
 
     // REGRA DE NEGÓCIO: Não permitir fechar pedido sem pagamento
     if (updateOrderDto.status === OrderStatus.CLOSED) {
-      const payments = await this.paymentRepository.find({ where: { orderId: id, companyId } });
+      const payments = await this.paymentRepository.find({
+        where: { orderId: id, companyId, tenantId },
+      });
       const totalPaid = payments.reduce((sum, payment) => sum + this.ensureNumber(payment.amount, 0), 0);
       const orderTotal = this.ensureNumber(order.total, 0);
 
@@ -206,7 +225,7 @@ export class OrdersService {
       await this.updateOrderTotals(id);
     }
 
-    const updatedOrder = await this.findOne(id, companyId);
+    const updatedOrder = await this.findOne(id, companyId, tenantId);
 
     // Notificar KDS
     if (updatedOrder.status === OrderStatus.CANCELLED) {
@@ -238,9 +257,9 @@ export class OrdersService {
     return updatedOrder;
   }
 
-  async deleteOrder(id: string, companyId: string): Promise<void> {
+  async deleteOrder(id: string, companyId: string, tenantId: string): Promise<void> {
     const order = await this.orderRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!order) {
@@ -261,7 +280,13 @@ export class OrdersService {
     this.kitchenGateway.notifyOrderCancelled(companyId, id);
   }
 
-  async updateOrderStatus(id: string, status: OrderStatus, userId: string, companyId: string): Promise<OrderResponseDto> {
+  async updateOrderStatus(
+    id: string,
+    status: OrderStatus,
+    userId: string,
+    companyId: string,
+    tenantId: string,
+  ): Promise<OrderResponseDto> {
     const updateDto: UpdateOrderDto = { status };
     
     if (status === OrderStatus.CLOSED) {
@@ -270,12 +295,12 @@ export class OrdersService {
       updateDto.cancelledBy = userId;
     }
 
-    return this.updateOrder(id, updateDto, userId, companyId);
+    return this.updateOrder(id, updateDto, userId, companyId, tenantId);
   }
 
-  async getOrdersByStatus(status: OrderStatus, companyId: string): Promise<OrderResponseDto[]> {
+  async getOrdersByStatus(status: OrderStatus, companyId: string, tenantId: string): Promise<OrderResponseDto[]> {
     const orders = await this.orderRepository.find({
-      where: { status, companyId },
+      where: { status, companyId, tenantId },
       relations: ['orderItems', 'table', 'customer', 'createdByUser'],
       order: { createdAt: 'ASC' },
     });
@@ -283,9 +308,9 @@ export class OrdersService {
     return Promise.all(orders.map(order => this.mapOrderToResponse(order)));
   }
 
-  async getOrdersByTable(tableId: string, companyId: string): Promise<OrderResponseDto[]> {
+  async getOrdersByTable(tableId: string, companyId: string, tenantId: string): Promise<OrderResponseDto[]> {
     const orders = await this.orderRepository.find({
-      where: { tableId, companyId },
+      where: { tableId, companyId, tenantId },
       relations: ['orderItems'],
       order: { createdAt: 'DESC' },
     });
@@ -309,14 +334,19 @@ export class OrdersService {
     }
   }
 
-  private buildQueryBuilder(query: OrderQueryDto, companyId: string): SelectQueryBuilder<Order> {
+  private buildQueryBuilder(
+    query: OrderQueryDto,
+    companyId: string,
+    tenantId: string,
+  ): SelectQueryBuilder<Order> {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.orderItems', 'orderItems')
       .leftJoinAndSelect('order.createdByUser', 'createdByUser')
       .leftJoinAndSelect('order.table', 'table')
       .leftJoinAndSelect('order.customer', 'customer')
-      .where('order.companyId = :companyId', { companyId });
+      .where('order.companyId = :companyId', { companyId })
+      .andWhere('order.tenantId = :tenantId', { tenantId });
 
     if (query.status) {
       queryBuilder.andWhere('order.status = :status', { status: query.status });
@@ -361,9 +391,9 @@ export class OrdersService {
     return queryBuilder;
   }
 
-  async splitOrder(id: string, splitData: any, companyId: string): Promise<OrderResponseDto[]> {
+  async splitOrder(id: string, splitData: any, companyId: string, tenantId: string): Promise<OrderResponseDto[]> {
     const originalOrder = await this.orderRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
       relations: ['orderItems'],
     });
 
@@ -383,6 +413,7 @@ export class OrdersService {
       total: splitData.items.reduce((sum, item) => sum + item.totalPrice, 0),
       subtotal: splitData.items.reduce((sum, item) => sum + item.totalPrice, 0) - originalOrder.discount,
       notes: `Pedido dividido de #${originalOrder.id}`,
+      tenantId,
     });
 
     const savedNewOrder = await this.orderRepository.save(newOrder);
@@ -405,16 +436,21 @@ export class OrdersService {
     // Notificar KDS
     this.kitchenGateway.notifyNewOrder(companyId, savedNewOrder as any);
 
-    return [await this.findOne(id, companyId), await this.findOne(savedNewOrder.id, companyId)];
+    return [
+      await this.findOne(id, companyId, tenantId),
+      await this.findOne(savedNewOrder.id, companyId, tenantId),
+    ];
   }
 
-  async mergeOrders(orderIds: string[], companyId: string): Promise<OrderResponseDto> {
+  async mergeOrders(orderIds: string[], companyId: string, tenantId: string): Promise<OrderResponseDto> {
     if (orderIds.length < 2) {
       throw new BadRequestException('É necessário pelo menos 2 pedidos para junção');
     }
 
     const orders = await Promise.all(
-      orderIds.map(id => this.orderRepository.findOne({ where: { id, companyId }, relations: ['orderItems'] }))
+      orderIds.map(id =>
+        this.orderRepository.findOne({ where: { id, companyId, tenantId }, relations: ['orderItems'] }),
+      ),
     );
 
     if (orders.some(order => !order)) {
@@ -461,7 +497,7 @@ export class OrdersService {
     // Notificar KDS
     this.kitchenGateway.notifyOrderUpdate(companyId, primaryOrder as any);
 
-    return this.findOne(primaryOrder.id, companyId);
+    return this.findOne(primaryOrder.id, companyId, tenantId);
   }
 
   private async mapOrderToResponse(order: Order): Promise<OrderResponseDto> {
@@ -528,13 +564,18 @@ export class OrdersService {
     };
   }
 
-  async addItemsToOrder(orderId: string, items: OrderItemDto[], companyId: string): Promise<OrderResponseDto> {
+  async addItemsToOrder(
+    orderId: string,
+    items: OrderItemDto[],
+    companyId: string,
+    tenantId: string,
+  ): Promise<OrderResponseDto> {
     if (!items || items.length === 0) {
-      return this.findOne(orderId, companyId);
+      return this.findOne(orderId, companyId, tenantId);
     }
 
     const order = await this.orderRepository.findOne({
-      where: { id: orderId, companyId },
+      where: { id: orderId, companyId, tenantId },
       relations: ['orderItems'],
     });
 
@@ -546,7 +587,7 @@ export class OrdersService {
       throw new BadRequestException('Este pedido não pode ser modificado');
     }
 
-    await this.adjustIngredientStocks(items, companyId);
+    await this.adjustIngredientStocks(items, companyId, tenantId);
 
     const newOrderItems = items.map(item => {
       const totalPrice = this.calculateItemTotal(item);
@@ -557,6 +598,7 @@ export class OrdersService {
         totalPrice,
         orderId: order.id,
         companyId,
+        tenantId,
       });
     });
 
@@ -576,10 +618,10 @@ export class OrdersService {
       updatedAt: new Date(),
     });
 
-    return this.findOne(orderId, companyId);
+    return this.findOne(orderId, companyId, tenantId);
   }
 
-  private async adjustIngredientStocks(items: OrderItemDto[], companyId: string): Promise<void> {
+  private async adjustIngredientStocks(items: OrderItemDto[], companyId: string, tenantId: string): Promise<void> {
     if (!items || items.length === 0) {
       return;
     }
@@ -589,10 +631,10 @@ export class OrdersService {
         continue;
       }
 
-      const recipe = await this.recipeRepository.findOne({ where: { productId: item.productId, companyId } });
+      const recipe = await this.recipeRepository.findOne({ where: { productId: item.productId, companyId, tenantId } });
       if (recipe && recipe.ingredients) {
         for (const recipeIngredient of recipe.ingredients) {
-          const ingredient = await this.ingredientRepository.findOne({ where: { id: recipeIngredient.ingredientId, companyId } });
+          const ingredient = await this.ingredientRepository.findOne({ where: { id: recipeIngredient.ingredientId, companyId, tenantId } });
           if (ingredient) {
             const totalRequired = this.ensureNumber(recipeIngredient.quantity, 0) * this.ensureNumber(item.quantity, 0);
             if (ingredient.currentStock < totalRequired) {
@@ -634,12 +676,13 @@ export class OrdersService {
   async registerQuickPayment(
     orderId: string,
     companyId: string,
+    tenantId: string,
     userId: string,
     paymentMethod?: PaymentMethod,
     paymentAmount?: number,
   ): Promise<Payment | null> {
     const order = await this.orderRepository.findOne({
-      where: { id: orderId, companyId },
+      where: { id: orderId, companyId, tenantId },
       relations: ['orderItems', 'table'],
     });
 
@@ -672,7 +715,7 @@ export class OrdersService {
       });
     }
 
-    const paidAmount = await this.getTotalPaid(orderId, companyId);
+    const paidAmount = await this.getTotalPaid(orderId, companyId, tenantId);
 
     let outstanding = this.ensureNumber(total - paidAmount, 0);
     if (outstanding <= 0) {
@@ -692,6 +735,7 @@ export class OrdersService {
 
     const payment = this.paymentRepository.create({
       companyId,
+      tenantId,
       orderId,
       customerId: order.customerId ?? undefined,
       amount: amountToPay,
@@ -716,13 +760,13 @@ export class OrdersService {
     const savedPayment = await this.paymentRepository.save(payment);
 
     const openRegister = await this.cashRegisterRepository.findOne({
-      where: { companyId, status: CashRegisterStatus.OPEN },
+      where: { companyId, tenantId, status: CashRegisterStatus.OPEN },
       order: { openedAt: 'DESC' },
     });
 
     if (openRegister) {
       const lastMovement = await this.cashMovementRepository.findOne({
-        where: { companyId, cashRegisterId: openRegister.id },
+        where: { companyId, tenantId, cashRegisterId: openRegister.id },
         order: { createdAt: 'DESC' },
       });
 
@@ -735,6 +779,7 @@ export class OrdersService {
 
       const movement = this.cashMovementRepository.create({
         companyId,
+        tenantId,
         cashRegisterId: openRegister.id,
         userId,
         movementType: MovementType.SALE,
@@ -768,9 +813,9 @@ export class OrdersService {
     return savedPayment;
   }
 
-  private async getTotalPaid(orderId: string, companyId: string): Promise<number> {
+  private async getTotalPaid(orderId: string, companyId: string, tenantId: string): Promise<number> {
     const payments = await this.paymentRepository.find({
-      where: { orderId, companyId, status: PaymentStatus.COMPLETED },
+      where: { orderId, companyId, tenantId, status: PaymentStatus.COMPLETED },
     });
 
     return payments.reduce((sum, payment) => sum + this.ensureNumber(payment.amount, 0), 0);

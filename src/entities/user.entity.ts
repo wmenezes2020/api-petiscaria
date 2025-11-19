@@ -13,6 +13,10 @@ import { Exclude } from 'class-transformer';
 import { Company } from './company.entity';
 import { Order } from './order.entity';
 import { Location } from './location.entity';
+import { Tenant } from './tenant.entity';
+import { Role } from './role.entity';
+import { TenantUser } from './tenant-user.entity';
+import { UserToken } from './user-token.entity';
 
 export enum UserRole {
   OWNER = 'owner',
@@ -31,7 +35,7 @@ export enum UserStatus {
 }
 
 @Entity('cliente_petiscaria_users')
-@Index(['email', 'companyId'], { unique: true }) // Manter este índice para garantir unicidade de email na empresa
+@Index(['email', 'tenantId'], { unique: true })
 @Index(['locationId'])
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -116,14 +120,28 @@ export class User {
   };
 
   @Column({ type: 'uuid' })
+  tenantId: string;
+
+  @Column({ type: 'uuid' })
   companyId: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  roleId: string;
 
   @Column({ type: 'uuid', nullable: true }) // Permitir nulo inicialmente para migração
   locationId: string;
 
+  @ManyToOne(() => Tenant, (tenant) => tenant.tenantUsers)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
+
   @ManyToOne(() => Company, (company) => company.users)
   @JoinColumn({ name: 'companyId' })
   company: Company;
+
+  @ManyToOne(() => Role, (role) => role.users, { nullable: true })
+  @JoinColumn({ name: 'roleId' })
+  roleEntity: Role;
 
   @ManyToOne(() => Location)
   @JoinColumn({ name: 'locationId' })
@@ -131,6 +149,12 @@ export class User {
 
   @OneToMany(() => Order, (order) => order.createdBy)
   orders: Order[];
+
+  @OneToMany(() => TenantUser, (tenantUser) => tenantUser.user)
+  tenantMemberships: TenantUser[];
+
+  @OneToMany(() => UserToken, (token) => token.user)
+  tokens: UserToken[];
 
   @CreateDateColumn()
   createdAt: Date;
@@ -140,7 +164,12 @@ export class User {
 
   // Métodos auxiliares
   hasPermission(permission: keyof User['permissions']): boolean {
-    return this.permissions?.[permission] || false;
+    if (this.permissions?.[permission]) {
+      return true;
+    }
+
+    const rolePermissions = this.roleEntity?.permissions?.map((perm) => perm.key) || [];
+    return rolePermissions.includes(permission as string);
   }
 
   isOwner(): boolean {

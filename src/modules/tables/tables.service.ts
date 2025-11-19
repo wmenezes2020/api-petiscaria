@@ -18,12 +18,13 @@ export class TablesService {
     private readonly ordersService: OrdersService,
   ) {}
 
-  async create(createTableDto: CreateTableDto, companyId: string): Promise<TableResponseDto> {
+  async create(createTableDto: CreateTableDto, companyId: string, tenantId: string): Promise<TableResponseDto> {
     // Verificar se já existe uma mesa com o mesmo número na mesma localização
     const existingTable = await this.tableRepository.findOne({
       where: { 
         name: createTableDto.name, 
         companyId,
+        tenantId,
         locationId: createTableDto.locationId || null
       },
     });
@@ -53,6 +54,7 @@ export class TablesService {
     const table = this.tableRepository.create({
       ...tableData,
       companyId,
+      tenantId,
       number: createTableDto.name, // number é o campo obrigatório, usar name como number
       status,
       x,
@@ -65,12 +67,16 @@ export class TablesService {
     return this.mapTableToResponse(savedTable);
   }
 
-  async findAll(query: TableQueryDto, companyId: string): Promise<{ tables: TableResponseDto[]; total: number }> {
+  async findAll(
+    query: TableQueryDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<{ tables: TableResponseDto[]; total: number }> {
     // Garantir valores padrão válidos
     const page = query.page || 1;
     const limit = query.limit || 20;
     
-    const queryBuilder = this.buildQueryBuilder(query, companyId);
+    const queryBuilder = this.buildQueryBuilder(query, companyId, tenantId);
     
     const [tables, total] = await queryBuilder
       .skip((page - 1) * limit)
@@ -81,9 +87,9 @@ export class TablesService {
     return { tables: tableResponses, total };
   }
 
-  async findOne(id: string, companyId: string): Promise<TableResponseDto> {
+  async findOne(id: string, companyId: string, tenantId: string): Promise<TableResponseDto> {
     const table = await this.tableRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
       relations: ['areaRelation'],
     });
 
@@ -94,9 +100,9 @@ export class TablesService {
     return this.mapTableToResponse(table);
   }
 
-  async update(id: string, updateTableDto: UpdateTableDto, companyId: string): Promise<TableResponseDto> {
+  async update(id: string, updateTableDto: UpdateTableDto, companyId: string, tenantId: string): Promise<TableResponseDto> {
     const table = await this.tableRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!table) {
@@ -106,7 +112,7 @@ export class TablesService {
     // Verificar se o novo nome já existe em outra mesa
     if (updateTableDto.name && updateTableDto.name !== table.name) {
       const existingTable = await this.tableRepository.findOne({
-        where: { name: updateTableDto.name, companyId },
+        where: { name: updateTableDto.name, companyId, tenantId },
       });
 
       if (existingTable) {
@@ -138,12 +144,17 @@ export class TablesService {
     await this.tableRepository.update(id, updateData);
 
     // Retornar a mesa atualizada
-    return this.findOne(id, companyId);
+    return this.findOne(id, companyId, tenantId);
   }
 
-  async updateStatus(id: string, updateStatusDto: UpdateTableStatusDto, companyId: string): Promise<TableResponseDto> {
+  async updateStatus(
+    id: string,
+    updateStatusDto: UpdateTableStatusDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<TableResponseDto> {
     const table = await this.tableRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!table) {
@@ -154,24 +165,25 @@ export class TablesService {
     await this.tableRepository.update(id, { status: updateStatusDto.status as unknown as TableStatus });
 
     // Retornar a mesa atualizada
-    return this.findOne(id, companyId);
+    return this.findOne(id, companyId, tenantId);
   }
 
-  async findByArea(area: string, companyId: string): Promise<TableResponseDto[]> {
+  async findByArea(area: string, companyId: string, tenantId: string): Promise<TableResponseDto[]> {
     const tables = await this.tableRepository
       .createQueryBuilder('table')
       .leftJoinAndSelect('table.areaRelation', 'area')
       .where('area.name = :areaName', { areaName: area })
       .andWhere('table.companyId = :companyId', { companyId })
+      .andWhere('table.tenantId = :tenantId', { tenantId })
       .orderBy('table.name', 'ASC')
       .getMany();
 
     return tables.map(table => this.mapTableToResponse(table));
   }
 
-  async remove(id: string, companyId: string): Promise<void> {
+  async remove(id: string, companyId: string, tenantId: string): Promise<void> {
     const table = await this.tableRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!table) {
@@ -182,7 +194,7 @@ export class TablesService {
     await this.tableRepository.update(id, { isActive: false });
   }
 
-  async reserveTable(id: string, companyId: string, reservationData: {
+  async reserveTable(id: string, companyId: string, tenantId: string, reservationData: {
     customerName: string;
     customerPhone: string;
     reservationTime: Date;
@@ -190,7 +202,7 @@ export class TablesService {
     notes?: string;
   }): Promise<TableResponseDto> {
     const table = await this.tableRepository.findOne({
-      where: { id, companyId },
+      where: { id, companyId, tenantId },
     });
 
     if (!table) {
@@ -206,13 +218,14 @@ export class TablesService {
       status: TableStatus.RESERVED,
     });
 
-    return this.findOne(id, companyId);
+    return this.findOne(id, companyId, tenantId);
   }
 
-  async getAvailableTables(companyId: string, customerCount?: number): Promise<TableResponseDto[]> {
+  async getAvailableTables(companyId: string, tenantId: string, customerCount?: number): Promise<TableResponseDto[]> {
     const queryBuilder = this.tableRepository
       .createQueryBuilder('table')
       .where('table.companyId = :companyId', { companyId })
+      .andWhere('table.tenantId = :tenantId', { tenantId })
       .andWhere('table.isActive = :isActive', { isActive: true })
       .andWhere('table.status = :status', { status: TableStatus.AVAILABLE });
 
@@ -224,7 +237,7 @@ export class TablesService {
     return tables.map(table => this.mapTableToResponse(table));
   }
 
-  async getTableStats(companyId: string): Promise<{
+  async getTableStats(companyId: string, tenantId: string): Promise<{
     total: number;
     available: number;
     occupied: number;
@@ -238,6 +251,7 @@ export class TablesService {
       .addSelect('COUNT(*)', 'count')
       .where('table.companyId = :companyId', { companyId })
       .andWhere('table.isActive = :isActive', { isActive: true })
+      .andWhere('table.tenantId = :tenantId', { tenantId })
       .groupBy('table.status')
       .getRawMany();
 
@@ -276,11 +290,12 @@ export class TablesService {
     return result;
   }
 
-  private buildQueryBuilder(query: TableQueryDto, companyId: string): SelectQueryBuilder<Table> {
+  private buildQueryBuilder(query: TableQueryDto, companyId: string, tenantId: string): SelectQueryBuilder<Table> {
     const queryBuilder = this.tableRepository
       .createQueryBuilder('table')
       .leftJoinAndSelect('table.areaRelation', 'area')
-      .where('table.companyId = :companyId', { companyId });
+      .where('table.companyId = :companyId', { companyId })
+      .andWhere('table.tenantId = :tenantId', { tenantId });
 
     if (query.search) {
       queryBuilder.andWhere(
@@ -361,8 +376,9 @@ export class TablesService {
     dto: OpenTableOrderDto,
     userId: string,
     companyId: string,
+    tenantId: string,
   ): Promise<{ order: OrderResponseDto; table: TableResponseDto }> {
-    const table = await this.tableRepository.findOne({ where: { id: tableId, companyId } });
+    const table = await this.tableRepository.findOne({ where: { id: tableId, companyId, tenantId } });
 
     if (!table) {
       throw new NotFoundException('Mesa não encontrada');
@@ -378,16 +394,21 @@ export class TablesService {
       throw new BadRequestException('Mesa não está disponível para abertura de comanda.');
     }
 
-    const order = await this.ordersService.createOrder({
-      channel: OrderChannel.TABLE,
-      tableId,
-      customerId: dto.customerId,
-      numberOfPeople: dto.numberOfPeople,
-      notes: dto.notes,
-      discount: 0,
-      tax: 0,
-      orderItems: dto.items ?? [],
-    }, userId, companyId);
+    const order = await this.ordersService.createOrder(
+      {
+        channel: OrderChannel.TABLE,
+        tableId,
+        customerId: dto.customerId,
+        numberOfPeople: dto.numberOfPeople,
+        notes: dto.notes,
+        discount: 0,
+        tax: 0,
+        orderItems: dto.items ?? [],
+      },
+      userId,
+      companyId,
+      tenantId,
+    );
 
     table.status = TableStatus.OCCUPIED;
     table.currentOrderId = order.id;
@@ -405,8 +426,9 @@ export class TablesService {
     tableId: string,
     dto: AddItemsTableOrderDto,
     companyId: string,
+    tenantId: string,
   ): Promise<OrderResponseDto> {
-    const table = await this.tableRepository.findOne({ where: { id: tableId, companyId } });
+    const table = await this.tableRepository.findOne({ where: { id: tableId, companyId, tenantId } });
 
     if (!table) {
       throw new NotFoundException('Mesa não encontrada');
@@ -416,7 +438,7 @@ export class TablesService {
       throw new BadRequestException('Não existe comanda ativa para esta mesa.');
     }
 
-    return this.ordersService.addItemsToOrder(table.currentOrderId, dto.items, companyId);
+    return this.ordersService.addItemsToOrder(table.currentOrderId, dto.items, companyId, tenantId);
   }
 
   async closeTableCommand(
@@ -424,8 +446,9 @@ export class TablesService {
     dto: CloseTableOrderDto,
     userId: string,
     companyId: string,
+    tenantId: string,
   ): Promise<{ order: OrderResponseDto; table: TableResponseDto; payment?: Payment | null }> {
-    const table = await this.tableRepository.findOne({ where: { id: tableId, companyId } });
+    const table = await this.tableRepository.findOne({ where: { id: tableId, companyId, tenantId } });
 
     if (!table) {
       throw new NotFoundException('Mesa não encontrada');
@@ -454,6 +477,7 @@ export class TablesService {
       payment = await this.ordersService.registerQuickPayment(
         table.currentOrderId,
         companyId,
+        tenantId,
         userId,
         dto.paymentMethod,
         dto.paymentAmount,
@@ -465,6 +489,7 @@ export class TablesService {
       orderUpdate,
       userId,
       companyId,
+      tenantId,
     );
 
     table.status = TableStatus.AVAILABLE;

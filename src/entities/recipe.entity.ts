@@ -11,13 +11,17 @@ import {
 import { Product } from './product.entity';
 import { Ingredient } from './ingredient.entity';
 import { Company } from './company.entity';
+import { Tenant } from './tenant.entity';
 
 @Entity('cliente_petiscaria_recipes')
-@Index(['companyId', 'productId'])
-@Index(['companyId', 'name'])
+@Index(['tenantId', 'companyId', 'productId'])
+@Index(['tenantId', 'companyId', 'name'])
 export class Recipe {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ type: 'uuid' })
   companyId: string;
@@ -79,6 +83,10 @@ export class Recipe {
   updatedAt: Date;
 
   // Relacionamentos
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
+
   @ManyToOne(() => Company)
   @JoinColumn({ name: 'companyId' })
   company: Company;

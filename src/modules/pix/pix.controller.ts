@@ -29,7 +29,7 @@ export class PixController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.pixService.createPixCharge(createPixChargeDto, companyId);
+    return this.pixService.createPixCharge(createPixChargeDto, companyId, req.user.tenantId);
   }
 
   @Get('charge/:chargeId/status')
@@ -39,7 +39,7 @@ export class PixController {
     @Request() req: any,
   ) {
     const companyId = req.user.companyId;
-    return this.pixService.getPixChargeStatus(chargeId, companyId);
+    return this.pixService.getPixChargeStatus(chargeId, companyId, req.user.tenantId);
   }
 
   @Post('charge/:chargeId/cancel')
@@ -50,7 +50,7 @@ export class PixController {
     @Request() req: any,
   ): Promise<void> {
     const companyId = req.user.companyId;
-    return this.pixService.cancelPixCharge(chargeId, companyId);
+    return this.pixService.cancelPixCharge(chargeId, companyId, req.user.tenantId);
   }
 
   @Post('webhook')
@@ -73,14 +73,15 @@ export class PixController {
     console.log('Webhook PIX recebido:', webhookData);
   }
 
-  @Post('webhook/:companyId')
+  @Post('webhook/:tenantId/:companyId')
   @Public()
   @HttpCode(HttpStatus.OK)
   async processCompanyWebhook(
+    @Param('tenantId') tenantId: string,
     @Param('companyId') companyId: string,
     @Body() webhookData: PixWebhookDto,
   ): Promise<void> {
-    await this.pixService.processWebhook(webhookData, companyId);
+    await this.pixService.processWebhook(webhookData, companyId, tenantId);
   }
 }
 

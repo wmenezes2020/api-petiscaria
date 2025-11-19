@@ -34,8 +34,9 @@ export class ProductsController {
   async create(
     @Body() createProductDto: CreateProductDto,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.create(createProductDto, companyId);
+    return this.productsService.create(createProductDto, companyId, req.user.tenantId);
   }
 
   @Get()
@@ -43,20 +44,21 @@ export class ProductsController {
   async findAll(
     @Query() query: ProductQueryDto,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<{ products: ProductResponseDto[]; total: number }> {
-    return this.productsService.findAll(query, companyId);
+    return this.productsService.findAll(query, companyId, req.user.tenantId);
   }
 
   @Get('stats')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
-  async getStats(@CompanyId() companyId: string) {
-    return this.productsService.getProductStats(companyId);
+  async getStats(@CompanyId() companyId: string, @Request() req: any) {
+    return this.productsService.getProductStats(companyId, req.user.tenantId);
   }
 
   @Get('low-stock')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
-  async getLowStockProducts(@CompanyId() companyId: string): Promise<ProductResponseDto[]> {
-    return this.productsService.getLowStockProducts(companyId);
+  async getLowStockProducts(@CompanyId() companyId: string, @Request() req: any): Promise<ProductResponseDto[]> {
+    return this.productsService.getLowStockProducts(companyId, req.user.tenantId);
   }
 
   @Get('category/:categoryId')
@@ -64,8 +66,9 @@ export class ProductsController {
   async getProductsByCategory(
     @Param('categoryId') categoryId: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<ProductResponseDto[]> {
-    return this.productsService.getProductsByCategory(categoryId, companyId);
+    return this.productsService.getProductsByCategory(categoryId, companyId, req.user.tenantId);
   }
 
   @Get('search/sku/:sku')
@@ -73,8 +76,9 @@ export class ProductsController {
   async findBySku(
     @Param('sku') sku: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<ProductResponseDto | null> {
-    return this.productsService.findBySku(sku, companyId);
+    return this.productsService.findBySku(sku, companyId, req.user.tenantId);
   }
 
   @Get('search/barcode/:barcode')
@@ -82,8 +86,9 @@ export class ProductsController {
   async findByBarcode(
     @Param('barcode') barcode: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<ProductResponseDto | null> {
-    return this.productsService.findByBarcode(barcode, companyId);
+    return this.productsService.findByBarcode(barcode, companyId, req.user.tenantId);
   }
 
   @Get(':id')
@@ -91,8 +96,9 @@ export class ProductsController {
   async findOne(
     @Param('id') id: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.findOne(id, companyId);
+    return this.productsService.findOne(id, companyId, req.user.tenantId);
   }
 
   @Patch(':id')
@@ -101,8 +107,9 @@ export class ProductsController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.update(id, updateProductDto, companyId);
+    return this.productsService.update(id, updateProductDto, companyId, req.user.tenantId);
   }
 
   @Patch(':id/stock')
@@ -111,8 +118,9 @@ export class ProductsController {
     @Param('id') id: string,
     @Body() updateStockDto: UpdateStockDto,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.updateStock(id, updateStockDto, companyId);
+    return this.productsService.updateStock(id, updateStockDto, companyId, req.user.tenantId);
   }
 
   @Delete(':id')
@@ -121,8 +129,9 @@ export class ProductsController {
   async remove(
     @Param('id') id: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<void> {
-    return this.productsService.deleteProduct(id, companyId);
+    return this.productsService.deleteProduct(id, companyId, req.user.tenantId);
   }
 }
 

@@ -1,14 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 import { Category } from './category.entity';
 import { Product } from './product.entity';
 import { StockMovement } from './stock-movement.entity';
 import { Ingredient } from './ingredient.entity';
+import { Tenant } from './tenant.entity';
 
 @Entity('cliente_petiscaria_companies')
 export class Company {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column()
   fantasia: string;
@@ -81,6 +85,10 @@ export class Company {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @ManyToOne(() => Tenant, (tenant) => tenant.companies, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
 
   @OneToMany(() => User, (user) => user.company)
   users: User[];

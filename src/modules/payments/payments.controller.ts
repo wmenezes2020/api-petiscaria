@@ -33,7 +33,7 @@ export class PaymentsController {
     @Request() req: any,
   ): Promise<PaymentResponseDto> {
     const companyId = req.user.companyId;
-    return this.paymentsService.createPayment(createPaymentDto, companyId);
+    return this.paymentsService.createPayment(createPaymentDto, companyId, req.user.tenantId);
   }
 
   @Get()
@@ -42,13 +42,13 @@ export class PaymentsController {
     @Request() req: any,
   ): Promise<{ payments: PaymentResponseDto[]; total: number }> {
     const companyId = req.user.companyId;
-    return this.paymentsService.findAll(query, companyId);
+    return this.paymentsService.findAll(query, companyId, req.user.tenantId);
   }
 
   @Get('stats')
   async getStats(@Request() req: any) {
     const companyId = req.user.companyId;
-    return this.paymentsService.getPaymentStats(companyId);
+    return this.paymentsService.getPaymentStats(companyId, req.user.tenantId);
   }
 
   @Get('order/:orderId')
@@ -57,7 +57,7 @@ export class PaymentsController {
     @Request() req: any,
   ): Promise<PaymentResponseDto[]> {
     const companyId = req.user.companyId;
-    return this.paymentsService.findByOrderId(orderId, companyId);
+    return this.paymentsService.findByOrderId(orderId, companyId, req.user.tenantId);
   }
 
   @Get(':id')
@@ -66,7 +66,7 @@ export class PaymentsController {
     @Request() req: any,
   ): Promise<PaymentResponseDto> {
     const companyId = req.user.companyId;
-    return this.paymentsService.findOne(id, companyId);
+    return this.paymentsService.findOne(id, companyId, req.user.tenantId);
   }
 
   @Patch(':id')
@@ -76,7 +76,7 @@ export class PaymentsController {
     @Request() req: any,
   ): Promise<PaymentResponseDto> {
     const companyId = req.user.companyId;
-    return this.paymentsService.updatePayment(id, updatePaymentDto, companyId);
+    return this.paymentsService.updatePayment(id, updatePaymentDto, companyId, req.user.tenantId);
   }
 
   @Post(':id/process')
@@ -86,7 +86,7 @@ export class PaymentsController {
     @Request() req: any,
   ): Promise<PaymentResponseDto> {
     const companyId = req.user.companyId;
-    return this.paymentsService.processPayment(id, processPaymentDto, companyId);
+    return this.paymentsService.processPayment(id, processPaymentDto, companyId, req.user.tenantId);
   }
 
   @Post(':id/cancel')
@@ -96,7 +96,7 @@ export class PaymentsController {
     @Request() req: any,
   ): Promise<PaymentResponseDto> {
     const companyId = req.user.companyId;
-    return this.paymentsService.cancelPayment(id, companyId, body.reason);
+    return this.paymentsService.cancelPayment(id, companyId, req.user.tenantId, body.reason);
   }
 
   @Post(':id/refund')
@@ -106,7 +106,7 @@ export class PaymentsController {
     @Request() req: any,
   ): Promise<PaymentResponseDto> {
     const companyId = req.user.companyId;
-    return this.paymentsService.refundPayment(id, refundDto, companyId);
+    return this.paymentsService.refundPayment(id, refundDto, companyId, req.user.tenantId);
   }
 
   @Delete(':id')
@@ -117,7 +117,7 @@ export class PaymentsController {
   ): Promise<void> {
     // Soft delete - marcar como cancelado
     const companyId = req.user.companyId;
-    await this.paymentsService.cancelPayment(id, companyId, 'Excluído pelo usuário');
+    await this.paymentsService.cancelPayment(id, companyId, req.user.tenantId, 'Excluído pelo usuário');
   }
 }
 

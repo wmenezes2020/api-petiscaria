@@ -14,6 +14,8 @@ describe('PixService', () => {
   let paymentsGateway: PaymentsGateway;
   let configService: ConfigService;
 
+  const tenantId = 'tenant-1';
+
   const mockPayment = {
     id: 'payment-1',
     orderId: 'order-1',
@@ -85,7 +87,7 @@ describe('PixService', () => {
       mockPaymentsService.findOne.mockResolvedValue(paidPayment);
 
       await expect(
-        service.createPixCharge(createPixChargeDto, 'company-1')
+        service.createPixCharge(createPixChargeDto, 'company-1', tenantId)
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -93,7 +95,7 @@ describe('PixService', () => {
       mockPaymentsService.findOne.mockResolvedValue(null);
 
       await expect(
-        service.createPixCharge(createPixChargeDto, 'company-1')
+        service.createPixCharge(createPixChargeDto, 'company-1', tenantId)
       ).rejects.toThrow();
     });
   });
@@ -113,7 +115,7 @@ describe('PixService', () => {
       mockPaymentsService.findOne.mockResolvedValue(mockPayment);
       mockPaymentsService.processPayment.mockResolvedValue(undefined);
 
-      await service.processWebhook(webhookDto, 'company-1');
+      await service.processWebhook(webhookDto, 'company-1', tenantId);
 
       expect(mockPaymentsGateway.notifyPaymentConfirmed).toHaveBeenCalled();
       expect(mockPaymentsService.processPayment).toHaveBeenCalled();
@@ -125,7 +127,8 @@ describe('PixService', () => {
 
       await service.processWebhook(
         { ...webhookDto, status: 'EXPIRED' },
-        'company-1'
+        'company-1',
+        tenantId,
       );
 
       expect(mockPaymentsService.updatePayment).toHaveBeenCalled();

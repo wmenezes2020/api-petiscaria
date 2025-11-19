@@ -33,8 +33,9 @@ export class CustomersController {
   async create(
     @Body() createCustomerDto: CreateCustomerDto,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<CustomerResponseDto> {
-    return this.customersService.createCustomer(createCustomerDto, companyId);
+    return this.customersService.createCustomer(createCustomerDto, companyId, req.user.tenantId);
   }
 
   @Get()
@@ -42,14 +43,15 @@ export class CustomersController {
   async findAll(
     @Query() query: CustomerQueryDto,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<{ customers: CustomerResponseDto[]; total: number }> {
-    return this.customersService.findAll(query, companyId);
+    return this.customersService.findAll(query, companyId, req.user.tenantId);
   }
 
   @Get('stats')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
-  async getStats(@CompanyId() companyId: string) {
-    return this.customersService.getCustomerStats(companyId);
+  async getStats(@CompanyId() companyId: string, @Request() req: any) {
+    return this.customersService.getCustomerStats(companyId, req.user.tenantId);
   }
 
   @Get('search/email/:email')
@@ -57,8 +59,9 @@ export class CustomersController {
   async findByEmail(
     @Param('email') email: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<CustomerResponseDto | null> {
-    return this.customersService.findByEmail(email, companyId);
+    return this.customersService.findByEmail(email, companyId, req.user.tenantId);
   }
 
   @Get('search/cpf/:cpf')
@@ -66,8 +69,9 @@ export class CustomersController {
   async findByCpf(
     @Param('cpf') cpf: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<CustomerResponseDto | null> {
-    return this.customersService.findByCpf(cpf, companyId);
+    return this.customersService.findByCpf(cpf, companyId, req.user.tenantId);
   }
 
   @Get('search/cnpj/:cnpj')
@@ -75,8 +79,9 @@ export class CustomersController {
   async findByCnpj(
     @Param('cnpj') cnpj: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<CustomerResponseDto | null> {
-    return this.customersService.findByCnpj(cnpj, companyId);
+    return this.customersService.findByCnpj(cnpj, companyId, req.user.tenantId);
   }
 
   @Get(':id')
@@ -84,8 +89,9 @@ export class CustomersController {
   async findOne(
     @Param('id') id: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<CustomerResponseDto> {
-    return this.customersService.findOne(id, companyId);
+    return this.customersService.findOne(id, companyId, req.user.tenantId);
   }
 
   @Patch(':id')
@@ -94,8 +100,9 @@ export class CustomersController {
     @Param('id') id: string,
     @Body() updateCustomerDto: UpdateCustomerDto,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<CustomerResponseDto> {
-    return this.customersService.updateCustomer(id, updateCustomerDto, companyId);
+    return this.customersService.updateCustomer(id, updateCustomerDto, companyId, req.user.tenantId);
   }
 
   @Delete(':id')
@@ -104,8 +111,9 @@ export class CustomersController {
   async remove(
     @Param('id') id: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<void> {
-    return this.customersService.deleteCustomer(id, companyId);
+    return this.customersService.deleteCustomer(id, companyId, req.user.tenantId);
   }
 
   @Patch(':id/activate')
@@ -113,8 +121,9 @@ export class CustomersController {
   async activate(
     @Param('id') id: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<CustomerResponseDto> {
-    return this.customersService.activateCustomer(id, companyId);
+    return this.customersService.activateCustomer(id, companyId, req.user.tenantId);
   }
 
   @Patch(':id/deactivate')
@@ -122,8 +131,9 @@ export class CustomersController {
   async deactivate(
     @Param('id') id: string,
     @CompanyId() companyId: string,
+    @Request() req: any,
   ): Promise<CustomerResponseDto> {
-    return this.customersService.deactivateCustomer(id, companyId);
+    return this.customersService.deactivateCustomer(id, companyId, req.user.tenantId);
   }
 }
 

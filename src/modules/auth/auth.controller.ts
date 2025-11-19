@@ -1,12 +1,12 @@
 import {
-  Controller,
-  Post,
   Body,
+  Controller,
+  Get,
   HttpCode,
   HttpStatus,
-  UseGuards,
-  Get,
+  Post,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -15,6 +15,7 @@ import { RegisterDto } from './dto/register.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
+import { TwoFactorTokenDto } from './dto/two-factor.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -30,8 +31,11 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Request() req): Promise<LoginResponseDto> {
+    return this.authService.login(loginDto, {
+      userAgent: req.headers['user-agent'],
+      ip: req.ip,
+    });
   }
 
   @Public()
@@ -65,10 +69,29 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout() {
-    // Em uma implementação real, você pode adicionar o token a uma blacklist
-    // ou usar Redis para invalidar tokens
+  async logout(@Body('refreshToken') refreshToken: string) {
+    if (refreshToken) {
+      await this.authService.revokeRefreshToken(refreshToken);
+    }
     return { message: 'Logout realizado com sucesso' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/setup')
+  async setupTwoFactor(@Request() req) {
+    return this.authService.generateTwoFactorSecret(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/verify')
+  async verifyTwoFactor(@Request() req, @Body() dto: TwoFactorTokenDto) {
+    return this.authService.enableTwoFactor(req.user.id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/disable')
+  async disableTwoFactor(@Request() req, @Body() dto: TwoFactorTokenDto) {
+    return this.authService.disableTwoFactor(req.user.id, dto);
   }
 }
 

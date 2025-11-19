@@ -11,6 +11,7 @@ import {
 import { Order } from './order.entity';
 import { Customer } from './customer.entity';
 import { Company } from './company.entity';
+import { Tenant } from './tenant.entity';
 
 export enum PaymentStatus {
   PENDING = 'pending',
@@ -40,14 +41,17 @@ export enum PaymentType {
 }
 
 @Entity('cliente_petiscaria_payments')
-@Index(['companyId', 'orderId'])
-@Index(['companyId', 'customerId'])
-@Index(['companyId', 'status'])
-@Index(['companyId', 'paymentMethod'])
-@Index(['companyId', 'createdAt'])
+@Index(['tenantId', 'companyId', 'orderId'])
+@Index(['tenantId', 'companyId', 'customerId'])
+@Index(['tenantId', 'companyId', 'status'])
+@Index(['tenantId', 'companyId', 'paymentMethod'])
+@Index(['tenantId', 'companyId', 'createdAt'])
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  tenantId: string;
 
   @Column({ type: 'uuid' })
   companyId: string;
@@ -159,6 +163,10 @@ export class Payment {
   @ManyToOne(() => Company)
   @JoinColumn({ name: 'companyId' })
   company: Company;
+  
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
   
   @ManyToOne(() => Order, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'orderId' })

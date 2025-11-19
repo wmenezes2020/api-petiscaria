@@ -16,8 +16,20 @@ async function bootstrap() {
   app.use(compression());
 
   // CORS
+  const rawCorsOrigins =
+    configService.get<string>('CORS_ORIGINS') || configService.get<string>('CORS_ORIGIN');
+
+  const parsedOrigins =
+    rawCorsOrigins
+      ?.split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean) || [];
+
+  const corsOriginConfig =
+    parsedOrigins.length === 0 ? '*' : parsedOrigins.length === 1 ? parsedOrigins[0] : parsedOrigins;
+
   app.enableCors({
-    origin: configService.get('CORS_ORIGIN') || '*',
+    origin: corsOriginConfig,
     credentials: true,
   });
 

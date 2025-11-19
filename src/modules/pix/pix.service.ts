@@ -22,7 +22,11 @@ export class PixService {
     this.openpixBaseUrl = this.configService.get<string>('OPENPIX_BASE_URL') || 'https://api.openpix.com.br';
   }
 
-  async createPixCharge(createPixChargeDto: CreatePixChargeDto, companyId: string): Promise<{
+  async createPixCharge(
+    createPixChargeDto: CreatePixChargeDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<{
     id: string;
     qrCode: string;
     qrCodeImage: string;
@@ -31,7 +35,11 @@ export class PixService {
   }> {
     try {
       // Verificar se o pagamento existe
-      const payment = await this.paymentsService.findOne(createPixChargeDto.paymentId, companyId);
+      const payment = await this.paymentsService.findOne(
+        createPixChargeDto.paymentId,
+        companyId,
+        tenantId,
+      );
       
       if (payment.status !== PaymentStatus.PENDING) {
         throw new BadRequestException('Apenas pagamentos pendentes podem gerar cobrança PIX');
@@ -71,16 +79,21 @@ export class PixService {
       const pixData = await response.json();
 
       // Atualizar pagamento com dados PIX
-      await this.paymentsService.updatePayment(createPixChargeDto.paymentId, {
-        pixKey: pixData.pixKey,
-        pixQrCode: pixData.qrCode,
-        pixExpirationDate: pixData.expiresAt,
-        metadata: {
-          ...payment.metadata,
-          openpixChargeId: pixData.id,
-          openpixResponse: pixData,
+      await this.paymentsService.updatePayment(
+        createPixChargeDto.paymentId,
+        {
+          pixKey: pixData.pixKey,
+          pixQrCode: pixData.qrCode,
+          pixExpirationDate: pixData.expiresAt,
+          metadata: {
+            ...payment.metadata,
+            openpixChargeId: pixData.id,
+            openpixResponse: pixData,
+          },
         },
-      }, companyId);
+        companyId,
+        tenantId,
+      );
 
       return {
         id: pixData.id,
@@ -95,12 +108,16 @@ export class PixService {
     }
   }
 
-  async processWebhook(webhookData: PixWebhookDto, companyId: string): Promise<void> {
+  async processWebhook(webhookData: PixWebhookDto, companyId: string, tenantId: string): Promise<void> {
     try {
       this.logger.log(`Processando webhook PIX: ${JSON.stringify(webhookData)}`);
 
       // Buscar pagamento pelo correlationId
-      const payment = await this.paymentsService.findOne(webhookData.correlationId, companyId);
+      const payment = await this.paymentsService.findOne(
+        webhookData.correlationId,
+        companyId,
+        tenantId,
+      );
 
       if (!payment) {
         this.logger.warn(`Pagamento não encontrado para correlationId: ${webhookData.correlationId}`);
@@ -116,7 +133,7 @@ export class PixService {
 
         case 'PAID':
           // Pagamento confirmado
-          await this.processPixPayment(payment.id, webhookData, companyId);
+          await this.processPixPayment(payment.id, webhookData, companyId, tenantId);
           // Notificar frontend via WebSocket
           this.paymentsGateway.notifyPaymentConfirmed(companyId, {
             paymentId: payment.id,
@@ -127,15 +144,25 @@ export class PixService {
 
         case 'EXPIRED':
           // Cobrança expirada
-          await this.paymentsService.updatePayment(payment.id, {
-            status: PaymentStatus.FAILED,
-            notes: `${payment.notes || ''}\nPIX expirado`.trim(),
-          }, companyId);
+          await this.paymentsService.updatePayment(
+            payment.id,
+            {
+              status: PaymentStatus.FAILED,
+              notes: `${payment.notes || ''}\nPIX expirado`.trim(),
+            },
+            companyId,
+            tenantId,
+          );
           break;
 
         case 'CANCELLED':
           // Cobrança cancelada
-          await this.paymentsService.cancelPayment(payment.id, companyId, 'Cancelado via OpenPIX');
+          await this.paymentsService.cancelPayment(
+            payment.id,
+            companyId,
+            tenantId,
+            'Cancelado via OpenPIX',
+          );
           break;
 
         default:
@@ -147,7 +174,12 @@ export class PixService {
     }
   }
 
-  private async processPixPayment(paymentId: string, webhookData: PixWebhookDto, companyId: string): Promise<void> {
+  private async processPixPayment(
+    paymentId: string,
+    webhookData: PixWebhookDto,
+    companyId: string,
+    tenantId: string,
+  ): Promise<void> {
     try {
       // Preparar dados para processamento
       const processPaymentDto: ProcessPaymentDto = {
@@ -164,7 +196,12 @@ export class PixService {
       };
 
       // Processar pagamento
-      await this.paymentsService.processPayment(paymentId, processPaymentDto, companyId);
+      await this.paymentsService.processPayment(
+        paymentId,
+        processPaymentDto,
+        companyId,
+        tenantId,
+      );
       
       this.logger.log(`Pagamento PIX processado com sucesso: ${paymentId}`);
     } catch (error) {
@@ -173,7 +210,11 @@ export class PixService {
     }
   }
 
-  async getPixChargeStatus(chargeId: string, companyId: string): Promise<{
+  async getPixChargeStatus(
+    chargeId: string,
+    companyId: string,
+    _tenantId: string,
+  ): Promise<{
     id: string;
     status: string;
     value: number;
@@ -208,7 +249,7 @@ export class PixService {
     }
   }
 
-  async cancelPixCharge(chargeId: string, companyId: string): Promise<void> {
+  async cancelPixCharge(chargeId: string, companyId: string, _tenantId: string): Promise<void> {
     try {
       // Cancelar cobrança no OpenPIX
       const response = await fetch(`${this.openpixBaseUrl}/api/v1/charge/${chargeId}/cancel`, {
