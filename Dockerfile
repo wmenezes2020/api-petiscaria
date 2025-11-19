@@ -1,59 +1,51 @@
-# Multi-stage build para otimização
-FROM node:18-alpine AS base
+# ------------------------------------------------------------
+# Base image with system dependencies
+# ------------------------------------------------------------
+ARG NODE_VERSION=20.11.1
+FROM node:${NODE_VERSION}-alpine AS base
 
-# Instalar dependências do sistema
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/cache/apk/*
-
-# Definir diretório de trabalho
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 
-# Copiar arquivos de dependências
+# ------------------------------------------------------------
+# Dependencies layer (installs all deps including dev)
+# ------------------------------------------------------------
+FROM base AS deps
 COPY package*.json ./
-COPY tsconfig*.json ./
-
-# Instalar dependências (incluindo dev para build)
-RUN npm ci && npm cache clean --force
-
-# Stage de desenvolvimento (opcional)
-FROM base AS development
 RUN npm ci
+
+# ------------------------------------------------------------
+# Builder layer (compiles the NestJS app)
+# ------------------------------------------------------------
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-# Stage de produção
-FROM base AS production
+# ------------------------------------------------------------
+# Production runner (only runtime deps + compiled dist)
+# ------------------------------------------------------------
+FROM node:${NODE_VERSION}-alpine AS runner
+WORKDIR /app
 
-# Definir variáveis de ambiente padrão
 ENV NODE_ENV=production
 
-# Criar usuário não-root para segurança
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nestjs -u 1001
+RUN apk add --no-cache tini \
+  && addgroup -g 1001 -S nodejs \
+  && adduser -S nestjs -G nodejs
 
-# Copiar código fonte
-COPY --chown=nestjs:nodejs . .
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
 
-# Build da aplicação
-RUN npm run build
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/healthcheck.js ./healthcheck.js
 
-# Remover dependências de desenvolvimento
-RUN npm prune --production
-
-# Mudar para usuário não-root
 USER nestjs
 
-# Expor porta
 EXPOSE 3001
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node healthcheck.js
+  CMD node healthcheck.js
 
-# Comando de inicialização
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/main.js"]
-
-
