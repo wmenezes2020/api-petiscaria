@@ -4,6 +4,8 @@
 ARG NODE_VERSION=20.11.1
 FROM node:${NODE_VERSION}-alpine AS base
 
+ENV NODE_ENV=development
+
 RUN apk add --no-cache python3 make g++
 WORKDIR /app
 
