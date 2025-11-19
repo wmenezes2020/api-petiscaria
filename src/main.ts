@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 import * as helmet from 'helmet';
 import * as compression from 'compression';
 
@@ -10,6 +11,17 @@ import { setupSwagger } from './config/swagger.config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const logger = new Logger('Bootstrap');
+
+  // Garante que as migrations do TypeORM sejam executadas automaticamente
+  try {
+    const dataSource = app.get(DataSource);
+    await dataSource.runMigrations();
+    logger.log('✅ Migrations executadas com sucesso.');
+  } catch (migrationError) {
+    logger.error('Falha ao executar migrations automaticamente', migrationError as Error);
+    throw migrationError;
+  }
 
   // Configurações de segurança
   app.use(helmet.default());
