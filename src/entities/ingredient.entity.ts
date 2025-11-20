@@ -34,7 +34,7 @@ export enum IngredientUnit {
   CAN = 'can',
 }
 
-@Entity('cliente_petiscaria_ingredients')
+@Entity('cliente_gp_ingredients')
 @Index(['tenantId', 'companyId', 'categoryId'])
 @Index(['tenantId', 'companyId', 'locationId', 'categoryId'])
 @Index(['tenantId', 'companyId', 'ingredientType'])

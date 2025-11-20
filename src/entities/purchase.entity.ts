@@ -21,7 +21,7 @@ export enum PurchaseStatus {
   RECEIVED = 'RECEIVED',
 }
 
-@Entity('cliente_petiscaria_purchases')
+@Entity('cliente_gp_purchases')
 @Index(['companyId', 'status'])
 @Index(['locationId', 'status'])
 export class Purchase {

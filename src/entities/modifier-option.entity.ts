@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { ModifierGroup } from './modifier-group.entity';
 
-@Entity('cliente_petiscaria_modifier_options')
+@Entity('cliente_gp_modifier_options')
 export class ModifierOption {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -21,7 +21,7 @@ async function fixUsersTable() {
       SELECT COLUMN_NAME 
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = DATABASE() 
-      AND TABLE_NAME = 'cliente_petiscaria_users' 
+      AND TABLE_NAME = 'cliente_gp_users' 
       AND COLUMN_NAME = 'locationId'
     `);
 
@@ -34,7 +34,7 @@ async function fixUsersTable() {
     
     // Adicionar a coluna locationId
     await connection.execute(`
-      ALTER TABLE cliente_petiscaria_users 
+      ALTER TABLE cliente_gp_users 
       ADD COLUMN locationId char(36) DEFAULT NULL AFTER companyId
     `);
 
@@ -43,13 +43,13 @@ async function fixUsersTable() {
     // Adicionar índice
     console.log('📝 Criando índice...');
     await connection.execute(`
-      CREATE INDEX IDX_locationId ON cliente_petiscaria_users(locationId)
+      CREATE INDEX IDX_locationId ON cliente_gp_users(locationId)
     `);
 
     console.log('✅ Índice criado com sucesso!');
 
     // Verificar a estrutura da tabela
-    const [tableStructure] = await connection.execute('DESCRIBE cliente_petiscaria_users');
+    const [tableStructure] = await connection.execute('DESCRIBE cliente_gp_users');
     console.log('📋 Estrutura atual da tabela users:');
     tableStructure.forEach(col => {
       console.log(`  ${col.Field} | ${col.Type} | ${col.Null} | ${col.Key} | ${col.Default}`);

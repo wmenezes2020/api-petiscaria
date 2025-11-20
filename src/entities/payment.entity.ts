@@ -40,7 +40,7 @@ export enum PaymentType {
   ADVANCE = 'advance',
 }
 
-@Entity('cliente_petiscaria_payments')
+@Entity('cliente_gp_payments')
 @Index(['tenantId', 'companyId', 'orderId'])
 @Index(['tenantId', 'companyId', 'customerId'])
 @Index(['tenantId', 'companyId', 'status'])

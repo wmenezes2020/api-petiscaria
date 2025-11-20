@@ -21,7 +21,7 @@ async function fixCompaniesTable() {
       SELECT TABLE_NAME 
       FROM INFORMATION_SCHEMA.TABLES 
       WHERE TABLE_SCHEMA = DATABASE() 
-      AND TABLE_NAME = 'cliente_petiscaria_companies'
+      AND TABLE_NAME = 'cliente_gp_companies'
     `);
 
     if (tables.length === 0) {
@@ -29,7 +29,7 @@ async function fixCompaniesTable() {
       
       // Criar a tabela companies
       await connection.execute(`
-        CREATE TABLE cliente_petiscaria_companies (
+        CREATE TABLE cliente_gp_companies (
           id varchar(36) NOT NULL,
           fantasia varchar(255) NOT NULL,
           razao_social varchar(255) NOT NULL,
@@ -49,7 +49,7 @@ async function fixCompaniesTable() {
       console.log('✅ Tabela companies já existe');
       
       // Verificar a estrutura da tabela
-      const [columns] = await connection.execute('DESCRIBE cliente_petiscaria_companies');
+      const [columns] = await connection.execute('DESCRIBE cliente_gp_companies');
       console.log('📋 Estrutura atual da tabela companies:');
       columns.forEach(col => {
         console.log(`  ${col.Field} | ${col.Type} | ${col.Null} | ${col.Key} | ${col.Default}`);
@@ -63,7 +63,7 @@ async function fixCompaniesTable() {
         
         // Adicionar a coluna fantasia
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_companies 
+          ALTER TABLE cliente_gp_companies 
           ADD COLUMN fantasia varchar(255) NOT NULL AFTER id
         `);
         
@@ -80,7 +80,7 @@ async function fixCompaniesTable() {
         
         // Adicionar a coluna razao_social
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_companies 
+          ALTER TABLE cliente_gp_companies 
           ADD COLUMN razao_social varchar(255) NOT NULL AFTER fantasia
         `);
         
@@ -97,7 +97,7 @@ async function fixCompaniesTable() {
         
         // Adicionar a coluna documento
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_companies 
+          ALTER TABLE cliente_gp_companies 
           ADD COLUMN documento varchar(255) NOT NULL AFTER razao_social
         `);
         
@@ -114,7 +114,7 @@ async function fixCompaniesTable() {
         
         // Adicionar a coluna pix_config
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_companies 
+          ALTER TABLE cliente_gp_companies 
           ADD COLUMN pix_config json DEFAULT NULL AFTER documento
         `);
         
@@ -131,7 +131,7 @@ async function fixCompaniesTable() {
         
         // Adicionar a coluna timezone
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_companies 
+          ALTER TABLE cliente_gp_companies 
           ADD COLUMN timezone varchar(255) DEFAULT NULL AFTER pix_config
         `);
         
@@ -148,7 +148,7 @@ async function fixCompaniesTable() {
         
         // Adicionar a coluna active
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_companies 
+          ALTER TABLE cliente_gp_companies 
           ADD COLUMN active tinyint NOT NULL DEFAULT '1' AFTER timezone
         `);
         
@@ -165,7 +165,7 @@ async function fixCompaniesTable() {
         
         // Adicionar a coluna created_at
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_companies 
+          ALTER TABLE cliente_gp_companies 
           ADD COLUMN created_at datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) AFTER active
         `);
         
@@ -182,7 +182,7 @@ async function fixCompaniesTable() {
         
         // Adicionar a coluna updated_at
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_companies 
+          ALTER TABLE cliente_gp_companies 
           ADD COLUMN updated_at datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) AFTER created_at
         `);
         
@@ -193,7 +193,7 @@ async function fixCompaniesTable() {
     }
 
     // Verificar a estrutura final da tabela
-    const [finalColumns] = await connection.execute('DESCRIBE cliente_petiscaria_companies');
+    const [finalColumns] = await connection.execute('DESCRIBE cliente_gp_companies');
     console.log('\n📋 Estrutura final da tabela companies:');
     finalColumns.forEach(col => {
       console.log(`  ${col.Field} | ${col.Type} | ${col.Null} | ${col.Key} | ${col.Default}`);

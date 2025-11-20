@@ -21,7 +21,7 @@ async function fixTablesTable() {
       SELECT COLUMN_NAME 
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = ? 
-      AND TABLE_NAME = 'cliente_petiscaria_tables'
+      AND TABLE_NAME = 'cliente_gp_tables'
       AND COLUMN_NAME IN ('x', 'y', 'xPosition', 'yPosition')
     `, [process.env.DB_DATABASE || 'petiscaria_db']);
 
@@ -31,7 +31,7 @@ async function fixTablesTable() {
     if (!columns.find(c => c.COLUMN_NAME === 'x')) {
       console.log('➕ Adicionando coluna x...');
       await connection.execute(`
-        ALTER TABLE cliente_petiscaria_tables 
+        ALTER TABLE cliente_gp_tables 
         ADD COLUMN x DECIMAL(5,2) NOT NULL DEFAULT 0.00
       `);
     }
@@ -39,7 +39,7 @@ async function fixTablesTable() {
     if (!columns.find(c => c.COLUMN_NAME === 'y')) {
       console.log('➕ Adicionando coluna y...');
       await connection.execute(`
-        ALTER TABLE cliente_petiscaria_tables 
+        ALTER TABLE cliente_gp_tables 
         ADD COLUMN y DECIMAL(5,2) NOT NULL DEFAULT 0.00
       `);
     }
@@ -48,14 +48,14 @@ async function fixTablesTable() {
     if (columns.find(c => c.COLUMN_NAME === 'xPosition')) {
       console.log('📋 Copiando dados de xPosition para x...');
       await connection.execute(`
-        UPDATE cliente_petiscaria_tables 
+        UPDATE cliente_gp_tables 
         SET x = xPosition 
         WHERE xPosition IS NOT NULL
       `);
       
       console.log('🗑️ Removendo coluna xPosition...');
       await connection.execute(`
-        ALTER TABLE cliente_petiscaria_tables 
+        ALTER TABLE cliente_gp_tables 
         DROP COLUMN xPosition
       `);
     }
@@ -63,14 +63,14 @@ async function fixTablesTable() {
     if (columns.find(c => c.COLUMN_NAME === 'yPosition')) {
       console.log('📋 Copiando dados de yPosition para y...');
       await connection.execute(`
-        UPDATE cliente_petiscaria_tables 
+        UPDATE cliente_gp_tables 
         SET y = yPosition 
         WHERE yPosition IS NOT NULL
       `);
       
       console.log('🗑️ Removendo coluna yPosition...');
       await connection.execute(`
-        ALTER TABLE cliente_petiscaria_tables 
+        ALTER TABLE cliente_gp_tables 
         DROP COLUMN yPosition
       `);
     }
@@ -80,7 +80,7 @@ async function fixTablesTable() {
       SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = ? 
-      AND TABLE_NAME = 'cliente_petiscaria_tables'
+      AND TABLE_NAME = 'cliente_gp_tables'
       ORDER BY ORDINAL_POSITION
     `, [process.env.DB_DATABASE || 'petiscaria_db']);
 

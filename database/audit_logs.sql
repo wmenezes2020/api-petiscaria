@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_audit_logs` (
+-- Tabela de Logs de Auditoria
+DROP TABLE IF EXISTS `cliente_gp_audit_logs`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_audit_logs` (
   `id` varchar(36) NOT NULL,
   `userId` varchar(36) NOT NULL,
   `userName` varchar(255) NOT NULL,
@@ -15,4 +17,4 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_audit_logs` (
   KEY `IDX_audit_log_company_action` (`companyId`,`action`,`entityName`),
   KEY `IDX_audit_log_location_action` (`locationId`,`action`,`entityName`),
   KEY `IDX_audit_log_userId` (`userId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

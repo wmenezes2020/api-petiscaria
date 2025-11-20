@@ -57,61 +57,61 @@ async function main() {
 
     // Garantir colunas tenantId
     await ensureColumn(
-      'cliente_petiscaria_cash_registers',
+      'cliente_gp_cash_registers',
       'tenantId char(36) NULL',
     );
     await ensureColumn(
-      'cliente_petiscaria_cash_movements',
+      'cliente_gp_cash_movements',
       'tenantId char(36) NULL',
     );
 
     // Preencher tenantId com base na company/registro
     await dataSource.query(`
-      UPDATE cliente_petiscaria_cash_registers cr
-      INNER JOIN cliente_petiscaria_companies c ON cr.companyId = c.id
+      UPDATE cliente_gp_cash_registers cr
+      INNER JOIN cliente_gp_companies c ON cr.companyId = c.id
       SET cr.tenantId = c.tenantId
       WHERE cr.tenantId IS NULL OR cr.tenantId = ''
     `);
 
     await dataSource.query(`
-      UPDATE cliente_petiscaria_cash_movements cm
-      INNER JOIN cliente_petiscaria_cash_registers cr ON cm.cashRegisterId = cr.id
+      UPDATE cliente_gp_cash_movements cm
+      INNER JOIN cliente_gp_cash_registers cr ON cm.cashRegisterId = cr.id
       SET cm.tenantId = cr.tenantId
       WHERE cm.tenantId IS NULL OR cm.tenantId = ''
     `);
 
     // Garantir constraints
     await ensureForeignKey(
-      'cliente_petiscaria_cash_registers',
+      'cliente_gp_cash_registers',
       'FK_cash_registers_tenants',
       `
-        ALTER TABLE cliente_petiscaria_cash_registers
+        ALTER TABLE cliente_gp_cash_registers
         ADD CONSTRAINT FK_cash_registers_tenants
         FOREIGN KEY (tenantId)
-        REFERENCES cliente_petiscaria_tenants(id)
+        REFERENCES cliente_gp_tenants(id)
         ON DELETE CASCADE ON UPDATE NO ACTION
       `,
     );
 
     await ensureForeignKey(
-      'cliente_petiscaria_cash_movements',
+      'cliente_gp_cash_movements',
       'FK_cash_movements_tenants',
       `
-        ALTER TABLE cliente_petiscaria_cash_movements
+        ALTER TABLE cliente_gp_cash_movements
         ADD CONSTRAINT FK_cash_movements_tenants
         FOREIGN KEY (tenantId)
-        REFERENCES cliente_petiscaria_tenants(id)
+        REFERENCES cliente_gp_tenants(id)
         ON DELETE CASCADE ON UPDATE NO ACTION
       `,
     );
 
     // Tornar NOT NULL
     await dataSource.query(`
-      ALTER TABLE cliente_petiscaria_cash_registers
+      ALTER TABLE cliente_gp_cash_registers
       MODIFY COLUMN tenantId char(36) NOT NULL
     `);
     await dataSource.query(`
-      ALTER TABLE cliente_petiscaria_cash_movements
+      ALTER TABLE cliente_gp_cash_movements
       MODIFY COLUMN tenantId char(36) NOT NULL
     `);
 

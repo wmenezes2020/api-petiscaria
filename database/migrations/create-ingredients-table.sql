@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_ingredients` (
+CREATE TABLE IF NOT EXISTS `cliente_gp_ingredients` (
   `id` CHAR(36) NOT NULL,
   `companyId` CHAR(36) NOT NULL,
   `locationId` CHAR(36) NULL,
@@ -28,8 +28,5 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_ingredients` (
   INDEX `idx_company_type` (`companyId`, `ingredientType`),
   INDEX `idx_location_type` (`locationId`, `ingredientType`),
   INDEX `idx_company_name` (`companyId`, `name`),
-  INDEX `idx_location_name` (`locationId`, `name`),
-  CONSTRAINT `fk_ingredients_company` FOREIGN KEY (`companyId`) REFERENCES `cliente_petiscaria_companies` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_ingredients_location` FOREIGN KEY (`locationId`) REFERENCES `cliente_petiscaria_locations` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_ingredients_category` FOREIGN KEY (`categoryId`) REFERENCES `cliente_petiscaria_categories` (`id`) ON DELETE CASCADE
+  INDEX `idx_location_name` (`locationId`, `name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

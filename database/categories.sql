@@ -1,5 +1,6 @@
 -- Criação da tabela de categorias (categories)
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_categories` (
+DROP TABLE IF EXISTS `cliente_gp_categories`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_categories` (
   `id` char(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,

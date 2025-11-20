@@ -19,7 +19,7 @@ export enum CashRegisterStatus {
   CLOSED = 'closed',
 }
 
-@Entity('cliente_petiscaria_cash_registers')
+@Entity('cliente_gp_cash_registers')
 @Index(['tenantId', 'companyId', 'status'])
 export class CashRegister {
   @PrimaryGeneratedColumn('uuid')

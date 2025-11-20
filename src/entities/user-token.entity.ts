@@ -10,7 +10,7 @@ import {
 import { User } from './user.entity';
 import { Tenant } from './tenant.entity';
 
-@Entity('cliente_petiscaria_user_tokens')
+@Entity('cliente_gp_user_tokens')
 export class UserToken {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -33,7 +33,7 @@ export enum OrderChannel {
   TAKEAWAY = 'takeaway',
 }
 
-@Entity('cliente_petiscaria_orders')
+@Entity('cliente_gp_orders')
 @Index(['tenantId'])
 @Index(['companyId'])
 @Index(['locationId'])

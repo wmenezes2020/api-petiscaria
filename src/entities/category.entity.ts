@@ -12,7 +12,7 @@ import {
 import { Company } from './company.entity';
 import { Product } from './product.entity';
 
-@Entity('cliente_petiscaria_categories')
+@Entity('cliente_gp_categories')
 @Index(['name', 'companyId'], { unique: true })
 @Index(['companyId'])
 export class Category {

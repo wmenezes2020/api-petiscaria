@@ -34,7 +34,7 @@ export enum StockMovementReason {
   INVENTORY_COUNT = 'inventory_count',
 }
 
-@Entity('cliente_petiscaria_stock_movements')
+@Entity('cliente_gp_stock_movements')
 @Index(['tenantId', 'companyId'])
 @Index(['tenantId', 'companyId', 'locationId'])
 @Index(['tenantId', 'companyId', 'productId'])

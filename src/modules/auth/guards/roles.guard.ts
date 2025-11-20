@@ -36,6 +36,11 @@ export class RolesGuard implements CanActivate {
       return false;
     }
 
+    // Proprietário sempre tem acesso
+    if (user.role === UserRole.OWNER) {
+      return true;
+    }
+
     // Verificar se o usuário tem pelo menos uma das roles requeridas
     const hasRequiredRole = requiredRoles.some((role) => user.role === role);
     

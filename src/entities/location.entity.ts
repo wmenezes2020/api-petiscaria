@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { Company } from './company.entity';
 
-@Entity('cliente_petiscaria_locations')
+@Entity('cliente_gp_locations')
 @Index(['companyId'])
 export class Location {
   @PrimaryGeneratedColumn('uuid')

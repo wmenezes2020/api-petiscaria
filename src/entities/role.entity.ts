@@ -12,7 +12,7 @@ import {
 import { Permission } from './permission.entity';
 import { User } from './user.entity';
 
-@Entity('cliente_petiscaria_roles')
+@Entity('cliente_gp_roles')
 @Index(['tenantId', 'key'], { unique: true })
 export class Role {
   @PrimaryGeneratedColumn('uuid')
@@ -41,7 +41,7 @@ export class Role {
     eager: true,
   })
   @JoinTable({
-    name: 'cliente_petiscaria_role_permissions',
+    name: 'cliente_gp_role_permissions',
     joinColumn: { name: 'roleId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'permissionId', referencedColumnName: 'id' },
   })

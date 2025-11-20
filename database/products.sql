@@ -1,7 +1,8 @@
 -- Criação da tabela de produtos (products)
-DROP TABLE IF EXISTS `cliente_petiscaria_products`;
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_products` (
+DROP TABLE IF EXISTS `cliente_gp_products`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_products` (
   `id` char(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `price` decimal(10,2) NOT NULL,
@@ -59,5 +60,6 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_products` (
   KEY `IDX_status` (`status`),
   KEY `IDX_cost_price` (`costPrice`),
   KEY `IDX_is_active` (`isActive`),
-  KEY `IDX_is_available` (`isAvailable`)
+  KEY `IDX_is_available` (`isAvailable`),
+  KEY `IDX_products_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

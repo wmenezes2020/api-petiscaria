@@ -20,7 +20,7 @@ export enum AuditLogAction {
   ACCESS = 'access',
 }
 
-@Entity('cliente_petiscaria_audit_logs')
+@Entity('cliente_gp_audit_logs')
 @Index(['companyId', 'action', 'entityName'])
 @Index(['locationId', 'action', 'entityName'])
 @Index(['userId'])

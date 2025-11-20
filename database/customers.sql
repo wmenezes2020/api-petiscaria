@@ -1,6 +1,7 @@
-DROP TABLE IF EXISTS `cliente_petiscaria_customers`;
-CREATE TABLE `cliente_petiscaria_customers` (
+DROP TABLE IF EXISTS `cliente_gp_customers`;
+CREATE TABLE `cliente_gp_customers` (
   `id` varchar(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `email` varchar(255) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
@@ -34,5 +35,6 @@ CREATE TABLE `cliente_petiscaria_customers` (
   UNIQUE KEY `uk_cnpj_company` (`cnpj`, `companyId`),
   KEY `idx_company_id` (`companyId`),
   KEY `idx_location_id` (`locationId`),
-  KEY `idx_phone_company` (`phone`, `companyId`)
+  KEY `idx_phone_company` (`phone`, `companyId`),
+  KEY `idx_customers_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

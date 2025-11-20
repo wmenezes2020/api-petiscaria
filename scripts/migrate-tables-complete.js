@@ -21,13 +21,13 @@ async function migrateTablesComplete() {
       SELECT TABLE_NAME 
       FROM INFORMATION_SCHEMA.TABLES 
       WHERE TABLE_SCHEMA = ? 
-      AND TABLE_NAME = 'cliente_petiscaria_tables'
+      AND TABLE_NAME = 'cliente_gp_tables'
     `, [process.env.DB_DATABASE || 'petiscaria_db']);
 
     if (tables.length === 0) {
       console.log('📋 Tabela não existe, criando...');
       await connection.execute(`
-        CREATE TABLE cliente_petiscaria_tables (
+        CREATE TABLE cliente_gp_tables (
           id varchar(36) NOT NULL,
           number varchar(10) NOT NULL,
           name varchar(255) DEFAULT NULL,
@@ -74,7 +74,7 @@ async function migrateTablesComplete() {
         SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT
         FROM INFORMATION_SCHEMA.COLUMNS 
         WHERE TABLE_SCHEMA = ? 
-        AND TABLE_NAME = 'cliente_petiscaria_tables'
+        AND TABLE_NAME = 'cliente_gp_tables'
         ORDER BY ORDINAL_POSITION
       `, [process.env.DB_DATABASE || 'petiscaria_db']);
 
@@ -92,7 +92,7 @@ async function migrateTablesComplete() {
         if (!columns.find(c => c.COLUMN_NAME === col.name)) {
           console.log(`➕ Adicionando coluna ${col.name}...`);
           await connection.execute(`
-            ALTER TABLE cliente_petiscaria_tables 
+            ALTER TABLE cliente_gp_tables 
             ADD COLUMN ${col.name} ${col.type}
           `);
         }
@@ -102,7 +102,7 @@ async function migrateTablesComplete() {
       if (!columns.find(c => c.COLUMN_NAME === 'x')) {
         console.log('➕ Adicionando coluna x...');
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_tables 
+          ALTER TABLE cliente_gp_tables 
           ADD COLUMN x DECIMAL(5,2) NOT NULL DEFAULT 0.00
         `);
       }
@@ -110,7 +110,7 @@ async function migrateTablesComplete() {
       if (!columns.find(c => c.COLUMN_NAME === 'y')) {
         console.log('➕ Adicionando coluna y...');
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_tables 
+          ALTER TABLE cliente_gp_tables 
           ADD COLUMN y DECIMAL(5,2) NOT NULL DEFAULT 0.00
         `);
       }
@@ -119,7 +119,7 @@ async function migrateTablesComplete() {
       if (columns.find(c => c.COLUMN_NAME === 'xPosition')) {
         console.log('🗑️ Removendo coluna xPosition...');
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_tables 
+          ALTER TABLE cliente_gp_tables 
           DROP COLUMN xPosition
         `);
       }
@@ -127,7 +127,7 @@ async function migrateTablesComplete() {
       if (columns.find(c => c.COLUMN_NAME === 'yPosition')) {
         console.log('🗑️ Removendo coluna yPosition...');
         await connection.execute(`
-          ALTER TABLE cliente_petiscaria_tables 
+          ALTER TABLE cliente_gp_tables 
           DROP COLUMN yPosition
         `);
       }
@@ -138,7 +138,7 @@ async function migrateTablesComplete() {
       SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = ? 
-      AND TABLE_NAME = 'cliente_petiscaria_tables'
+      AND TABLE_NAME = 'cliente_gp_tables'
       ORDER BY ORDINAL_POSITION
     `, [process.env.DB_DATABASE || 'petiscaria_db']);
 

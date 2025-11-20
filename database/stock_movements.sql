@@ -1,5 +1,7 @@
-CREATE TABLE `cliente_petiscaria_stock_movements` (
+DROP TABLE IF EXISTS `cliente_gp_stock_movements`;
+CREATE TABLE `cliente_gp_stock_movements` (
   `id` varchar(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
   `type` varchar(50) NOT NULL,
   `reason` varchar(50) NOT NULL,
   `quantity` decimal(10,3) NOT NULL,
@@ -26,5 +28,6 @@ CREATE TABLE `cliente_petiscaria_stock_movements` (
   KEY `idx_product_id` (`productId`),
   KEY `idx_type` (`type`),
   KEY `idx_reason` (`reason`),
-  KEY `idx_date` (`date`)
+  KEY `idx_date` (`date`),
+  KEY `idx_stock_movements_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

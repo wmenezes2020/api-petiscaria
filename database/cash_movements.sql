@@ -1,6 +1,8 @@
 -- Tabela de Movimentos de Caixa
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_cash_movements` (
+DROP TABLE IF EXISTS `cliente_gp_cash_movements`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_cash_movements` (
   `id` CHAR(36) NOT NULL,
+  `tenantId` CHAR(36) NOT NULL,
   `companyId` CHAR(36) NOT NULL,
   `locationId` CHAR(36) NULL,
   `cashRegisterId` CHAR(36) NOT NULL,
@@ -27,9 +29,5 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_cash_movements` (
   INDEX `idx_location_created` (`locationId`, `createdAt`),
   INDEX `idx_company_user` (`companyId`, `userId`),
   INDEX `idx_location_user` (`locationId`, `userId`),
-  CONSTRAINT `fk_cash_movements_company` FOREIGN KEY (`companyId`) REFERENCES `cliente_petiscaria_companies` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_cash_movements_location` FOREIGN KEY (`locationId`) REFERENCES `cliente_petiscaria_locations` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_cash_movements_user` FOREIGN KEY (`userId`) REFERENCES `cliente_petiscaria_users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_cash_movements_order` FOREIGN KEY (`orderId`) REFERENCES `cliente_petiscaria_orders` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_cash_movements_payment` FOREIGN KEY (`paymentId`) REFERENCES `cliente_petiscaria_payments` (`id`) ON DELETE SET NULL
+  INDEX `idx_cash_movements_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

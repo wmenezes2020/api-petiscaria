@@ -30,7 +30,7 @@ export enum TableShape {
   OVAL = 'oval',
 }
 
-@Entity('cliente_petiscaria_tables')
+@Entity('cliente_gp_tables')
 @Index(['tenantId'])
 @Index(['companyId'])
 @Index(['locationId'])

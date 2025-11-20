@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_recipes` (
+CREATE TABLE IF NOT EXISTS `cliente_gp_recipes` (
   `id` CHAR(36) NOT NULL,
   `companyId` CHAR(36) NOT NULL,
   `productId` CHAR(36) NOT NULL,

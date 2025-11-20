@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_purchases` (
+CREATE TABLE IF NOT EXISTS `cliente_gp_purchases` (
   `id` varchar(36) NOT NULL,
   `supplierId` varchar(36) NOT NULL,
   `purchaseDate` date NOT NULL,
@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_purchases` (
   KEY `IDX_purchases_companyId_status` (`companyId`,`status`),
   KEY `IDX_purchases_locationId_status` (`locationId`,`status`),
   KEY `FK_purchases_supplierId` (`supplierId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

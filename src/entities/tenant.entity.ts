@@ -16,7 +16,7 @@ export enum TenantStatus {
   INACTIVE = 'inactive',
 }
 
-@Entity('cliente_petiscaria_tenants')
+@Entity('cliente_gp_tenants')
 export class Tenant {
   @PrimaryGeneratedColumn('uuid')
   id: string;

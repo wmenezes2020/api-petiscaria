@@ -1,11 +1,11 @@
-DROP TABLE IF EXISTS `cliente_petiscaria_role_permissions`;
-DROP TABLE IF EXISTS `cliente_petiscaria_user_tokens`;
-DROP TABLE IF EXISTS `cliente_petiscaria_tenant_users`;
-DROP TABLE IF EXISTS `cliente_petiscaria_roles`;
-DROP TABLE IF EXISTS `cliente_petiscaria_permissions`;
-DROP TABLE IF EXISTS `cliente_petiscaria_tenants`;
+DROP TABLE IF EXISTS `cliente_gp_role_permissions`;
+DROP TABLE IF EXISTS `cliente_gp_user_tokens`;
+DROP TABLE IF EXISTS `cliente_gp_tenant_users`;
+DROP TABLE IF EXISTS `cliente_gp_roles`;
+DROP TABLE IF EXISTS `cliente_gp_permissions`;
+DROP TABLE IF EXISTS `cliente_gp_tenants`;
 
-CREATE TABLE `cliente_petiscaria_tenants` (
+CREATE TABLE `cliente_gp_tenants` (
   `id` char(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `legalName` varchar(255) DEFAULT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE `cliente_petiscaria_tenants` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `cliente_petiscaria_permissions` (
+CREATE TABLE `cliente_gp_permissions` (
   `id` char(36) NOT NULL,
   `key` varchar(255) NOT NULL,
   `resource` varchar(120) NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE `cliente_petiscaria_permissions` (
   UNIQUE KEY `UK_permission_key` (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `cliente_petiscaria_roles` (
+CREATE TABLE `cliente_gp_roles` (
   `id` char(36) NOT NULL,
   `tenantId` char(36) DEFAULT NULL,
   `key` varchar(120) NOT NULL,
@@ -49,11 +49,10 @@ CREATE TABLE `cliente_petiscaria_roles` (
   `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK_role_key_tenant` (`key`,`tenantId`),
-  KEY `idx_role_tenant` (`tenantId`),
-  CONSTRAINT `FK_roles_tenant` FOREIGN KEY (`tenantId`) REFERENCES `cliente_petiscaria_tenants` (`id`) ON DELETE CASCADE
+  KEY `idx_role_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `cliente_petiscaria_tenant_users` (
+CREATE TABLE `cliente_gp_tenant_users` (
   `id` char(36) NOT NULL,
   `tenantId` char(36) NOT NULL,
   `userId` char(36) NOT NULL,
@@ -63,21 +62,17 @@ CREATE TABLE `cliente_petiscaria_tenant_users` (
   `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK_tenant_user` (`tenantId`,`userId`),
-  KEY `idx_tenant_users_user` (`userId`),
-  CONSTRAINT `FK_tenant_users_tenant` FOREIGN KEY (`tenantId`) REFERENCES `cliente_petiscaria_tenants` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `FK_tenant_users_user` FOREIGN KEY (`userId`) REFERENCES `cliente_petiscaria_users` (`id`) ON DELETE CASCADE
+  KEY `idx_tenant_users_user` (`userId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `cliente_petiscaria_role_permissions` (
+CREATE TABLE `cliente_gp_role_permissions` (
   `roleId` char(36) NOT NULL,
   `permissionId` char(36) NOT NULL,
   PRIMARY KEY (`roleId`,`permissionId`),
-  KEY `idx_role_permission_perm` (`permissionId`),
-  CONSTRAINT `FK_role_permissions_role` FOREIGN KEY (`roleId`) REFERENCES `cliente_petiscaria_roles` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `FK_role_permissions_permission` FOREIGN KEY (`permissionId`) REFERENCES `cliente_petiscaria_permissions` (`id`) ON DELETE CASCADE
+  KEY `idx_role_permission_perm` (`permissionId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `cliente_petiscaria_user_tokens` (
+CREATE TABLE `cliente_gp_user_tokens` (
   `id` char(36) NOT NULL,
   `userId` char(36) NOT NULL,
   `tenantId` char(36) DEFAULT NULL,
@@ -91,8 +86,6 @@ CREATE TABLE `cliente_petiscaria_user_tokens` (
   `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (`id`),
   KEY `idx_user_tokens_user` (`userId`),
-  KEY `idx_user_tokens_tenant` (`tenantId`),
-  CONSTRAINT `FK_user_tokens_user` FOREIGN KEY (`userId`) REFERENCES `cliente_petiscaria_users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `FK_user_tokens_tenant` FOREIGN KEY (`tenantId`) REFERENCES `cliente_petiscaria_tenants` (`id`) ON DELETE CASCADE
+  KEY `idx_user_tokens_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

@@ -34,7 +34,7 @@ export enum ProductType {
   COMBO = 'combo',
 }
 
-@Entity('cliente_petiscaria_products')
+@Entity('cliente_gp_products')
 @Index(['tenantId', 'companyId'])
 @Index(['tenantId', 'companyId', 'name', 'locationId'])
 @Index(['tenantId', 'companyId', 'categoryId'])
@@ -244,7 +244,7 @@ export class Product {
 
   @ManyToMany(() => ModifierGroup, (modifierGroup) => modifierGroup.products)
   @JoinTable({
-    name: 'cliente_petiscaria_product_modifier_groups',
+    name: 'cliente_gp_product_modifier_groups',
     joinColumn: { name: 'productId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'modifierGroupId', referencedColumnName: 'id' },
   })

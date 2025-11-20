@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { Role } from './role.entity';
 
-@Entity('cliente_petiscaria_permissions')
+@Entity('cliente_gp_permissions')
 @Unique(['key'])
 export class Permission {
   @PrimaryGeneratedColumn('uuid')

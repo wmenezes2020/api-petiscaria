@@ -17,7 +17,7 @@ async function checkCompaniesStructure() {
     console.log('🔌 Conectado ao banco de dados MySQL');
 
     // Verificar a estrutura da tabela companies
-    const [columns] = await connection.execute('DESCRIBE cliente_petiscaria_companies');
+    const [columns] = await connection.execute('DESCRIBE cliente_gp_companies');
     console.log('📋 Estrutura atual da tabela companies:');
     columns.forEach(col => {
       console.log(`  ${col.Field} | ${col.Type} | ${col.Null} | ${col.Key} | ${col.Default}`);

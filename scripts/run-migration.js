@@ -35,7 +35,7 @@ async function runMigration() {
       SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = DATABASE() 
-      AND TABLE_NAME = 'cliente_petiscaria_users' 
+      AND TABLE_NAME = 'cliente_gp_users' 
       AND COLUMN_NAME = 'locationId'
     `);
 

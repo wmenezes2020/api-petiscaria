@@ -12,7 +12,7 @@ import {
 import { Company } from './company.entity';
 import { Table } from './table.entity';
 
-@Entity('cliente_petiscaria_areas')
+@Entity('cliente_gp_areas')
 @Index(['companyId'])
 export class Area {
   @PrimaryGeneratedColumn('uuid')

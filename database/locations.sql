@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS `cliente_petiscaria_locations`;
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_locations` (
+DROP TABLE IF EXISTS `cliente_gp_locations`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_locations` (
   `id` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `address` varchar(255) DEFAULT NULL,

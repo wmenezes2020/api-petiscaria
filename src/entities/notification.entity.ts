@@ -31,7 +31,7 @@ export enum NotificationStatus {
   ARCHIVED = 'archived',
 }
 
-@Entity('cliente_petiscaria_notifications')
+@Entity('cliente_gp_notifications')
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id: string;

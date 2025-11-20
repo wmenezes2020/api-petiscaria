@@ -1,6 +1,8 @@
 -- Tabela de Pagamentos
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_payments` (
+DROP TABLE IF EXISTS `cliente_gp_payments`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_payments` (
   `id` CHAR(36) NOT NULL,
+  `tenantId` CHAR(36) NOT NULL,
   `companyId` CHAR(36) NOT NULL,
   `locationId` CHAR(36) NULL,
   `orderId` CHAR(36) NOT NULL,
@@ -42,8 +44,5 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_payments` (
   INDEX `idx_location_method` (`locationId`, `paymentMethod`),
   INDEX `idx_company_created` (`companyId`, `createdAt`),
   INDEX `idx_location_created` (`locationId`, `createdAt`),
-  CONSTRAINT `fk_payments_company` FOREIGN KEY (`companyId`) REFERENCES `cliente_petiscaria_companies` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_payments_location` FOREIGN KEY (`locationId`) REFERENCES `cliente_petiscaria_locations` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_payments_order` FOREIGN KEY (`orderId`) REFERENCES `cliente_petiscaria_orders` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_payments_customer` FOREIGN KEY (`customerId`) REFERENCES `cliente_petiscaria_customers` (`id`) ON DELETE SET NULL
+  INDEX `idx_payments_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

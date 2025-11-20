@@ -1,6 +1,8 @@
 -- Tabela de Receitas
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_recipes` (
+DROP TABLE IF EXISTS `cliente_gp_recipes`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_recipes` (
   `id` CHAR(36) NOT NULL,
+  `tenantId` CHAR(36) NOT NULL,
   `companyId` CHAR(36) NOT NULL,
   `productId` CHAR(36) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -20,8 +22,7 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_recipes` (
   PRIMARY KEY (`id`),
   INDEX `idx_company_product` (`companyId`, `productId`),
   INDEX `idx_company_name` (`companyId`, `name`),
-  CONSTRAINT `fk_recipes_company` FOREIGN KEY (`companyId`) REFERENCES `cliente_petiscaria_companies` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_recipes_product` FOREIGN KEY (`productId`) REFERENCES `cliente_petiscaria_products` (`id`) ON DELETE CASCADE
+  INDEX `idx_recipes_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

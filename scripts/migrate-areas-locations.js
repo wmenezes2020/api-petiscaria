@@ -23,13 +23,13 @@ async function migrateAreasLocations() {
       SELECT COUNT(*) as count 
       FROM information_schema.tables 
       WHERE table_schema = '${config.database}' 
-      AND table_name = 'cliente_petiscaria_locations'
+      AND table_name = 'cliente_gp_locations'
     `);
 
     if (locationsTable[0].count === 0) {
-      console.log('➕ Criando tabela cliente_petiscaria_locations...');
+      console.log('➕ Criando tabela cliente_gp_locations...');
       await connection.execute(`
-                 CREATE TABLE \`cliente_petiscaria_locations\` (
+                 CREATE TABLE \`cliente_gp_locations\` (
            \`id\` varchar(36) NOT NULL,
            \`name\` varchar(255) NOT NULL,
            \`address\` varchar(255) DEFAULT NULL,
@@ -49,13 +49,13 @@ async function migrateAreasLocations() {
 
       // Criar uma localização padrão para cada empresa existente
       const [companies] = await connection.execute(`
-        SELECT id, name FROM \`cliente_petiscaria_companies\`
+        SELECT id, name FROM \`cliente_gp_companies\`
       `);
 
       for (const company of companies) {
         const locationId = require('crypto').randomUUID();
         await connection.execute(`
-          INSERT INTO \`cliente_petiscaria_locations\` (id, name, companyId) 
+          INSERT INTO \`cliente_gp_locations\` (id, name, companyId) 
           VALUES (?, ?, ?)
         `, [locationId, `${company.name} - Sede`, company.id]);
         console.log(`📍 Localização padrão criada para empresa: ${company.name}`);
@@ -69,13 +69,13 @@ async function migrateAreasLocations() {
       SELECT COUNT(*) as count 
       FROM information_schema.tables 
       WHERE table_schema = '${config.database}' 
-      AND table_name = 'cliente_petiscaria_areas'
+      AND table_name = 'cliente_gp_areas'
     `);
 
     if (areasTable[0].count === 0) {
-      console.log('➕ Criando tabela cliente_petiscaria_areas...');
+      console.log('➕ Criando tabela cliente_gp_areas...');
       await connection.execute(`
-                 CREATE TABLE \`cliente_petiscaria_areas\` (
+                 CREATE TABLE \`cliente_gp_areas\` (
            \`id\` varchar(36) NOT NULL,
            \`name\` varchar(255) NOT NULL,
            \`description\` text,
@@ -90,19 +90,19 @@ async function migrateAreasLocations() {
 
       // Criar uma área padrão para cada empresa
       const [companies] = await connection.execute(`
-        SELECT id FROM \`cliente_petiscaria_companies\`
+        SELECT id FROM \`cliente_gp_companies\`
       `);
 
       for (const company of companies) {
         // Verificar se já existe área para esta empresa
         const [existingAreas] = await connection.execute(`
-          SELECT id FROM \`cliente_petiscaria_areas\` WHERE companyId = ?
+          SELECT id FROM \`cliente_gp_areas\` WHERE companyId = ?
         `, [company.id]);
 
         if (existingAreas.length === 0) {
           const areaId = require('crypto').randomUUID();
           await connection.execute(`
-            INSERT INTO \`cliente_petiscaria_areas\` (id, name, description, companyId) 
+            INSERT INTO \`cliente_gp_areas\` (id, name, description, companyId) 
             VALUES (?, ?, ?, ?)
           `, [areaId, 'Área Principal', 'Área principal do estabelecimento', company.id]);
           console.log(`🏠 Área padrão criada para empresa: ${company.id}`);
@@ -116,7 +116,7 @@ async function migrateAreasLocations() {
         SELECT COLUMN_NAME 
         FROM INFORMATION_SCHEMA.COLUMNS 
         WHERE TABLE_SCHEMA = '${config.database}' 
-        AND TABLE_NAME = 'cliente_petiscaria_areas'
+        AND TABLE_NAME = 'cliente_gp_areas'
       `);
 
       const existingColumns = columns.map(col => col.COLUMN_NAME);
@@ -137,7 +137,7 @@ async function migrateAreasLocations() {
     console.log('\n📊 Estrutura final das tabelas:');
     
     const [areasStructure] = await connection.execute(`
-      DESCRIBE \`cliente_petiscaria_areas\`
+      DESCRIBE \`cliente_gp_areas\`
     `);
     console.log('\n🏠 Tabela areas:');
     areasStructure.forEach(col => {
@@ -145,7 +145,7 @@ async function migrateAreasLocations() {
     });
 
     const [locationsStructure] = await connection.execute(`
-      DESCRIBE \`cliente_petiscaria_locations\`
+      DESCRIBE \`cliente_gp_locations\`
     `);
     console.log('\n📍 Tabela locations:');
     locationsStructure.forEach(col => {

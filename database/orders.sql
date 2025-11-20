@@ -1,6 +1,7 @@
-DROP TABLE IF EXISTS `cliente_petiscaria_orders`;
-CREATE TABLE `cliente_petiscaria_orders` (
+DROP TABLE IF EXISTS `cliente_gp_orders`;
+CREATE TABLE `cliente_gp_orders` (
   `id` varchar(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'open',
   `channel` varchar(50) NOT NULL DEFAULT 'table',
   `notes` varchar(255) DEFAULT NULL,
@@ -30,11 +31,12 @@ CREATE TABLE `cliente_petiscaria_orders` (
   `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_order_number_company` (`orderNumber`, `companyId`),
-  KEY `idx_company_id` (`companyId`),
-  KEY `idx_location_id` (`locationId`),
-  KEY `idx_status` (`status`),
-  KEY `idx_table_id` (`tableId`),
-  KEY `idx_customer_id` (`customerId`),
-  KEY `idx_created_by` (`createdBy`),
-  KEY `idx_order_number` (`orderNumber`)
+  KEY `idx_orders_company` (`companyId`),
+  KEY `idx_orders_location` (`locationId`),
+  KEY `idx_orders_status` (`status`),
+  KEY `idx_orders_table` (`tableId`),
+  KEY `idx_orders_customer` (`customerId`),
+  KEY `idx_orders_created_by` (`createdBy`),
+  KEY `idx_orders_order_number` (`orderNumber`),
+  KEY `idx_orders_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

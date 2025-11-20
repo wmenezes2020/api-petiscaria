@@ -18,7 +18,7 @@ export enum SupplierStatus {
   INACTIVE = 'inactive',
 }
 
-@Entity('cliente_petiscaria_suppliers')
+@Entity('cliente_gp_suppliers')
 @Index(['companyId'])
 @Index(['cnpj', 'companyId'], { unique: true })
 @Index(['email', 'companyId'], { unique: true })
@@ -80,7 +80,7 @@ export class Supplier {
 
   @ManyToMany(() => Location)
   @JoinTable({
-    name: 'cliente_petiscaria_supplier_locations',
+    name: 'cliente_gp_supplier_locations',
     joinColumn: { name: 'supplierId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'locationId', referencedColumnName: 'id' },
   })

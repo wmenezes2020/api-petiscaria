@@ -1,4 +1,5 @@
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_purchases` (
+DROP TABLE IF EXISTS `cliente_gp_purchases`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_purchases` (
   `id` varchar(36) NOT NULL,
   `supplierId` varchar(36) NOT NULL,
   `purchaseDate` date NOT NULL,
@@ -12,8 +13,5 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_purchases` (
   PRIMARY KEY (`id`),
   KEY `IDX_purchases_companyId_status` (`companyId`,`status`),
   KEY `IDX_purchases_locationId_status` (`locationId`,`status`),
-  KEY `FK_purchases_supplierId` (`supplierId`),
-  CONSTRAINT `FK_purchases_companyId` FOREIGN KEY (`companyId`) REFERENCES `cliente_petiscaria_companies` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_purchases_locationId` FOREIGN KEY (`locationId`) REFERENCES `cliente_petiscaria_locations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `FK_purchases_supplierId` FOREIGN KEY (`supplierId`) REFERENCES `cliente_petiscaria_suppliers` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `FK_purchases_supplierId` (`supplierId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

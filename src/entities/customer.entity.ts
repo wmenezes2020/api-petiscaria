@@ -26,7 +26,7 @@ export enum CustomerType {
   VIP = 'vip',
 }
 
-@Entity('cliente_petiscaria_customers')
+@Entity('cliente_gp_customers')
 @Index(['tenantId', 'companyId'])
 @Index(['tenantId', 'companyId', 'locationId'])
 @Index(['tenantId', 'companyId', 'email'], { unique: true })

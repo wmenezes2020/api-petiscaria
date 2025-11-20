@@ -12,7 +12,7 @@ import { Order } from './order.entity';
 import { Product } from './product.entity';
 import { Tenant } from './tenant.entity';
 
-@Entity('cliente_petiscaria_order_items')
+@Entity('cliente_gp_order_items')
 @Index(['orderId'])
 @Index(['productId'])
 @Index(['companyId'])

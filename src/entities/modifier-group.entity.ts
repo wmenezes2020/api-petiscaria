@@ -20,7 +20,7 @@ export enum ModifierGroupType {
   MULTIPLE = 'multiple', // O cliente pode escolher várias opções (ex: adicionais)
 }
 
-@Entity('cliente_petiscaria_modifier_groups')
+@Entity('cliente_gp_modifier_groups')
 @Index(['companyId'])
 @Index(['locationId'])
 export class ModifierGroup {

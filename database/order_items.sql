@@ -1,6 +1,7 @@
-DROP TABLE IF EXISTS `cliente_petiscaria_order_items`;
-CREATE TABLE `cliente_petiscaria_order_items` (
+DROP TABLE IF EXISTS `cliente_gp_order_items`;
+CREATE TABLE `cliente_gp_order_items` (
   `id` varchar(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
   `productName` varchar(255) NOT NULL,
   `productDescription` text DEFAULT NULL,
   `unitPrice` decimal(10,2) NOT NULL,
@@ -30,5 +31,6 @@ CREATE TABLE `cliente_petiscaria_order_items` (
   KEY `idx_product_id` (`productId`),
   KEY `idx_company_id` (`companyId`),
   KEY `idx_status` (`status`),
-  KEY `idx_is_ready` (`isReady`)
+  KEY `idx_is_ready` (`isReady`),
+  KEY `idx_order_items_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

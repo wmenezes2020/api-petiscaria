@@ -36,7 +36,7 @@ export enum PaymentMethod {
   VOUCHER = 'voucher',
 }
 
-@Entity('cliente_petiscaria_cash_movements')
+@Entity('cliente_gp_cash_movements')
 @Index(['tenantId', 'companyId', 'cashRegisterId'])
 @Index(['tenantId', 'companyId', 'movementType'])
 @Index(['tenantId', 'companyId', 'createdAt'])

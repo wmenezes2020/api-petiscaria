@@ -9,7 +9,7 @@ import { Purchase } from './purchase.entity';
 import { Ingredient } from './ingredient.entity';
 import { Company } from './company.entity';
 
-@Entity('cliente_petiscaria_purchase_items')
+@Entity('cliente_gp_purchase_items')
 export class PurchaseItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;

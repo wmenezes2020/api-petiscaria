@@ -20,7 +20,7 @@ async function migrateCustomers() {
     
     // Verificar se a tabela existe
     const [tables] = await connection.execute(
-      "SHOW TABLES LIKE 'cliente_petiscaria_customers'"
+      "SHOW TABLES LIKE 'cliente_gp_customers'"
     );
     
     if (tables.length === 0) {
@@ -28,7 +28,7 @@ async function migrateCustomers() {
       
       // Criar tabela completa
       const createTableSQL = `
-        CREATE TABLE \`cliente_petiscaria_customers\` (
+        CREATE TABLE \`cliente_gp_customers\` (
           \`id\` varchar(36) NOT NULL,
           \`name\` varchar(255) NOT NULL,
           \`email\` varchar(255) DEFAULT NULL,
@@ -68,20 +68,20 @@ async function migrateCustomers() {
       `;
       
       await connection.execute(createTableSQL);
-      console.log('✅ Tabela cliente_petiscaria_customers criada com sucesso');
+      console.log('✅ Tabela cliente_gp_customers criada com sucesso');
       
     } else {
       console.log('📋 Tabela existe, verificando colunas...');
       
       // Verificar se a coluna notes existe
       const [notesColumn] = await connection.execute(
-        "SHOW COLUMNS FROM cliente_petiscaria_customers LIKE 'notes'"
+        "SHOW COLUMNS FROM cliente_gp_customers LIKE 'notes'"
       );
       
       if (notesColumn.length === 0) {
         console.log('➕ Adicionando coluna notes...');
         await connection.execute(
-          "ALTER TABLE cliente_petiscaria_customers ADD COLUMN notes text DEFAULT NULL AFTER status"
+          "ALTER TABLE cliente_gp_customers ADD COLUMN notes text DEFAULT NULL AFTER status"
         );
         console.log('✅ Coluna notes adicionada');
       } else {
@@ -90,13 +90,13 @@ async function migrateCustomers() {
       
       // Verificar se a coluna lastVisitDate existe
       const [lastVisitDateColumn] = await connection.execute(
-        "SHOW COLUMNS FROM cliente_petiscaria_customers LIKE 'lastVisitDate'"
+        "SHOW COLUMNS FROM cliente_gp_customers LIKE 'lastVisitDate'"
       );
       
       if (lastVisitDateColumn.length === 0) {
         console.log('➕ Adicionando coluna lastVisitDate...');
         await connection.execute(
-          "ALTER TABLE cliente_petiscaria_customers ADD COLUMN lastVisitDate timestamp NULL DEFAULT NULL AFTER lastVisitAt"
+          "ALTER TABLE cliente_gp_customers ADD COLUMN lastVisitDate timestamp NULL DEFAULT NULL AFTER lastVisitAt"
         );
         console.log('✅ Coluna lastVisitDate adicionada');
       } else {

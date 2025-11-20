@@ -5,10 +5,10 @@
 SET @sql = (SELECT IF(
     (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
      WHERE TABLE_SCHEMA = DATABASE() 
-     AND TABLE_NAME = 'cliente_petiscaria_users' 
+     AND TABLE_NAME = 'cliente_gp_users' 
      AND COLUMN_NAME = 'locationId') > 0,
-    'SELECT "Coluna locationId já existe na tabela cliente_petiscaria_users" as message',
-    'ALTER TABLE cliente_petiscaria_users ADD COLUMN locationId char(36) DEFAULT NULL AFTER companyId'
+    'SELECT "Coluna locationId já existe na tabela cliente_gp_users" as message',
+    'ALTER TABLE cliente_gp_users ADD COLUMN locationId char(36) DEFAULT NULL AFTER companyId'
 ));
 
 PREPARE stmt FROM @sql;
@@ -19,10 +19,10 @@ DEALLOCATE PREPARE stmt;
 SET @sql = (SELECT IF(
     (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS 
      WHERE TABLE_SCHEMA = DATABASE() 
-     AND TABLE_NAME = 'cliente_petiscaria_users' 
+     AND TABLE_NAME = 'cliente_gp_users' 
      AND INDEX_NAME = 'IDX_locationId') > 0,
-    'SELECT "Índice IDX_locationId já existe na tabela cliente_petiscaria_users" as message',
-    'CREATE INDEX IDX_locationId ON cliente_petiscaria_users(locationId)'
+    'SELECT "Índice IDX_locationId já existe na tabela cliente_gp_users" as message',
+    'CREATE INDEX IDX_locationId ON cliente_gp_users(locationId)'
 ));
 
 PREPARE stmt FROM @sql;
@@ -37,5 +37,5 @@ SELECT
     COLUMN_DEFAULT
 FROM INFORMATION_SCHEMA.COLUMNS 
 WHERE TABLE_SCHEMA = DATABASE() 
-AND TABLE_NAME = 'cliente_petiscaria_users' 
+AND TABLE_NAME = 'cliente_gp_users' 
 AND COLUMN_NAME = 'locationId';

@@ -11,7 +11,7 @@ import {
 import { Tenant } from './tenant.entity';
 import { User } from './user.entity';
 
-@Entity('cliente_petiscaria_tenant_users')
+@Entity('cliente_gp_tenant_users')
 @Unique(['tenantId', 'userId'])
 export class TenantUser {
   @PrimaryGeneratedColumn('uuid')

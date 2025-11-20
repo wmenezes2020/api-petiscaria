@@ -1,6 +1,7 @@
-DROP TABLE IF EXISTS `cliente_petiscaria_tables`;
-CREATE TABLE `cliente_petiscaria_tables` (
+DROP TABLE IF EXISTS `cliente_gp_tables`;
+CREATE TABLE `cliente_gp_tables` (
   `id` varchar(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
   `number` varchar(10) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'available',
@@ -35,5 +36,5 @@ CREATE TABLE `cliente_petiscaria_tables` (
   KEY `idx_area_id` (`areaId`),
   KEY `idx_status` (`status`),
   KEY `idx_current_order` (`currentOrderId`),
-  CONSTRAINT `FK_tables_current_order` FOREIGN KEY (`currentOrderId`) REFERENCES `cliente_petiscaria_orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  KEY `idx_tables_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

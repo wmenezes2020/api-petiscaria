@@ -23,7 +23,7 @@ async function migrateOrderItems() {
       SELECT COLUMN_NAME 
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = '${config.database}' 
-      AND TABLE_NAME = 'cliente_petiscaria_order_items'
+      AND TABLE_NAME = 'cliente_gp_order_items'
     `);
 
     const existingColumns = columns.map(col => col.COLUMN_NAME);
@@ -54,7 +54,7 @@ async function migrateOrderItems() {
       if (!existingColumns.includes(column.name)) {
         console.log(`➕ Adicionando coluna: ${column.name}`);
         await connection.execute(`
-          ALTER TABLE \`cliente_petiscaria_order_items\` 
+          ALTER TABLE \`cliente_gp_order_items\` 
           ${column.definition}
         `);
         console.log(`✅ Coluna ${column.name} adicionada`);
@@ -68,7 +68,7 @@ async function migrateOrderItems() {
       SELECT INDEX_NAME 
       FROM INFORMATION_SCHEMA.STATISTICS 
       WHERE TABLE_SCHEMA = '${config.database}' 
-      AND TABLE_NAME = 'cliente_petiscaria_order_items'
+      AND TABLE_NAME = 'cliente_gp_order_items'
     `);
 
     const existingIndexes = indexes.map(idx => idx.INDEX_NAME);
@@ -90,7 +90,7 @@ async function migrateOrderItems() {
       if (!existingIndexes.includes(index.name)) {
         console.log(`➕ Adicionando índice: ${index.name}`);
         await connection.execute(`
-          ALTER TABLE \`cliente_petiscaria_order_items\` 
+          ALTER TABLE \`cliente_gp_order_items\` 
           ${index.definition}
         `);
         console.log(`✅ Índice ${index.name} adicionado`);
@@ -101,7 +101,7 @@ async function migrateOrderItems() {
 
     // Verificar estrutura final
     const [finalColumns] = await connection.execute(`
-      DESCRIBE \`cliente_petiscaria_order_items\`
+      DESCRIBE \`cliente_gp_order_items\`
     `);
 
     console.log('\n📊 Estrutura final da tabela:');

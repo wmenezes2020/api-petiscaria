@@ -6,7 +6,7 @@ import { StockMovement } from './stock-movement.entity';
 import { Ingredient } from './ingredient.entity';
 import { Tenant } from './tenant.entity';
 
-@Entity('cliente_petiscaria_companies')
+@Entity('cliente_gp_companies')
 export class Company {
   @PrimaryGeneratedColumn('uuid')
   id: string;

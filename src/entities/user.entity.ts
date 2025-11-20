@@ -34,7 +34,7 @@ export enum UserStatus {
   SUSPENDED = 'suspended',
 }
 
-@Entity('cliente_petiscaria_users')
+@Entity('cliente_gp_users')
 @Index(['email', 'tenantId'], { unique: true })
 @Index(['locationId'])
 export class User {

@@ -1,6 +1,10 @@
--- Criação da tabela de usuários (users)
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_users` (
+DROP TABLE IF EXISTS `cliente_gp_users`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_users` (
   `id` char(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
+  `companyId` char(36) NOT NULL,
+  `roleId` char(36) DEFAULT NULL,
+  `locationId` char(36) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
@@ -21,12 +25,12 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_users` (
   `lastLoginAt` timestamp NULL DEFAULT NULL,
   `lastLoginIp` varchar(45) DEFAULT NULL,
   `permissions` json DEFAULT NULL,
-  `companyId` char(36) NOT NULL,
-  `locationId` char(36) DEFAULT NULL,
   `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_email_companyId` (`email`,`companyId`),
-  KEY `IDX_companyId` (`companyId`),
-  KEY `IDX_locationId` (`locationId`)
+  UNIQUE KEY `UK_users_email_tenant` (`email`,`tenantId`),
+  KEY `IDX_users_company` (`companyId`),
+  KEY `IDX_users_location` (`locationId`),
+  KEY `IDX_users_role` (`roleId`),
+  KEY `IDX_users_tenant` (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

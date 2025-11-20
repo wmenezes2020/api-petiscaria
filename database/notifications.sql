@@ -1,6 +1,8 @@
 -- Tabela de notificações
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_notifications` (
+DROP TABLE IF EXISTS `cliente_gp_notifications`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_notifications` (
   `id` char(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
   `companyId` char(36) NOT NULL,
   `userId` char(36) DEFAULT NULL,
   `type` varchar(100) NOT NULL COMMENT 'Tipo da notificação',
@@ -20,7 +22,5 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_notifications` (
   KEY `idx_type` (`type`),
   KEY `idx_status` (`status`),
   KEY `idx_created_at` (`createdAt`),
-  KEY `idx_expires_at` (`expiresAt`),
-  CONSTRAINT `fk_notifications_company` FOREIGN KEY (`companyId`) REFERENCES `cliente_petiscaria_companies` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_notifications_user` FOREIGN KEY (`userId`) REFERENCES `cliente_petiscaria_users` (`id`) ON DELETE SET NULL
+  KEY `idx_expires_at` (`expiresAt`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabela de notificações do sistema';

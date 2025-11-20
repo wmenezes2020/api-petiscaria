@@ -1,5 +1,7 @@
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_suppliers` (
+DROP TABLE IF EXISTS `cliente_gp_suppliers`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_suppliers` (
   `id` varchar(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `contactName` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
@@ -17,6 +19,5 @@ CREATE TABLE IF NOT EXISTS `cliente_petiscaria_suppliers` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_suppliers_cnpj_companyId` (`cnpj`,`companyId`),
   UNIQUE KEY `IDX_suppliers_email_companyId` (`email`,`companyId`),
-  KEY `IDX_suppliers_companyId` (`companyId`),
-  CONSTRAINT `FK_suppliers_companyId` FOREIGN KEY (`companyId`) REFERENCES `cliente_petiscaria_companies` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `IDX_suppliers_companyId` (`companyId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

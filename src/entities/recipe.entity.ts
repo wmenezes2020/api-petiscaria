@@ -13,7 +13,7 @@ import { Ingredient } from './ingredient.entity';
 import { Company } from './company.entity';
 import { Tenant } from './tenant.entity';
 
-@Entity('cliente_petiscaria_recipes')
+@Entity('cliente_gp_recipes')
 @Index(['tenantId', 'companyId', 'productId'])
 @Index(['tenantId', 'companyId', 'name'])
 export class Recipe {

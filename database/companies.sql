@@ -1,14 +1,34 @@
 -- Criação da tabela de empresas (companies)
-CREATE TABLE IF NOT EXISTS `cliente_petiscaria_companies` (
-  `id` varchar(36) NOT NULL,
+DROP TABLE IF EXISTS `cliente_gp_companies`;
+CREATE TABLE IF NOT EXISTS `cliente_gp_companies` (
+  `id` char(36) NOT NULL,
+  `tenantId` char(36) NOT NULL,
   `fantasia` varchar(255) NOT NULL,
   `razao_social` varchar(255) NOT NULL,
   `documento` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `cnpj` varchar(20) NOT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `state` varchar(2) DEFAULT NULL,
+  `zipCode` varchar(10) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `logo` varchar(255) DEFAULT NULL,
+  `banner` varchar(255) DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'active',
+  `plan` varchar(50) NOT NULL DEFAULT 'basic',
+  `planExpiresAt` datetime DEFAULT NULL,
   `pix_config` json DEFAULT NULL,
   `timezone` varchar(255) DEFAULT NULL,
   `active` tinyint NOT NULL DEFAULT '1',
+  `settings` json DEFAULT NULL,
+  `openPixConfig` json DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_documento` (`documento`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `UK_companies_documento` (`documento`),
+  UNIQUE KEY `UK_companies_cnpj` (`cnpj`),
+  KEY `IDX_companies_tenant` (`tenantId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
