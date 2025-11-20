@@ -16,7 +16,7 @@ CREATE TABLE `cliente_petiscaria_tenants` (
   `plan` varchar(50) NOT NULL DEFAULT 'basic',
   `planExpiresAt` datetime DEFAULT NULL,
   `billingInfo` json DEFAULT NULL,
-  `configPic` json DEFAULT NULL,
+  `configPix` json DEFAULT NULL,
   `settings` json DEFAULT NULL,
   `timezone` varchar(64) DEFAULT NULL,
   `isActive` tinyint(1) NOT NULL DEFAULT 1,

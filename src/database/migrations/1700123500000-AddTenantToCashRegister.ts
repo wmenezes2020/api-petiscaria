@@ -1,63 +1,83 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner, TableForeignKey } from 'typeorm';
 
 export class AddTenantToCashRegister1700123500000 implements MigrationInterface {
   name = 'AddTenantToCashRegister1700123500000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Adicionar tenantId a cash_registers
-    await queryRunner.query(`ALTER TABLE cliente_petiscaria_cash_registers ADD tenantId char(36) NULL`);
-    
-    // Adicionar tenantId a cash_movements
-    await queryRunner.query(`ALTER TABLE cliente_petiscaria_cash_movements ADD tenantId char(36) NULL`);
+    const cashRegistersTable = 'cliente_petiscaria_cash_registers';
+    const cashMovementsTable = 'cliente_petiscaria_cash_movements';
 
-    // Backfill: copiar tenantId das companies
+    if (!(await queryRunner.hasColumn(cashRegistersTable, 'tenantId'))) {
+      await queryRunner.query(`ALTER TABLE ${cashRegistersTable} ADD tenantId char(36) NULL`);
+    }
+
+    if (!(await queryRunner.hasColumn(cashMovementsTable, 'tenantId'))) {
+      await queryRunner.query(`ALTER TABLE ${cashMovementsTable} ADD tenantId char(36) NULL`);
+    }
+
     await queryRunner.query(`
       UPDATE cliente_petiscaria_cash_registers cr
       INNER JOIN cliente_petiscaria_companies c ON cr.companyId = c.id
       SET cr.tenantId = c.tenantId
-      WHERE cr.tenantId IS NULL
+      WHERE cr.tenantId IS NULL OR cr.tenantId = ''
     `);
 
     await queryRunner.query(`
       UPDATE cliente_petiscaria_cash_movements cm
       INNER JOIN cliente_petiscaria_cash_registers cr ON cm.cashRegisterId = cr.id
       SET cm.tenantId = cr.tenantId
-      WHERE cm.tenantId IS NULL
+      WHERE cm.tenantId IS NULL OR cm.tenantId = ''
     `);
 
-    // Adicionar FKs
-    await queryRunner.query(`
-      ALTER TABLE cliente_petiscaria_cash_registers
-      ADD CONSTRAINT FK_cash_registers_tenants FOREIGN KEY (tenantId)
-      REFERENCES cliente_petiscaria_tenants(id)
-      ON DELETE CASCADE ON UPDATE NO ACTION
-    `);
+    const cashRegistersTableInfo = await queryRunner.getTable(cashRegistersTable);
+    const cashMovementsTableInfo = await queryRunner.getTable(cashMovementsTable);
 
-    await queryRunner.query(`
-      ALTER TABLE cliente_petiscaria_cash_movements
-      ADD CONSTRAINT FK_cash_movements_tenants FOREIGN KEY (tenantId)
-      REFERENCES cliente_petiscaria_tenants(id)
-      ON DELETE CASCADE ON UPDATE NO ACTION
-    `);
+    if (
+      cashRegistersTableInfo &&
+      !cashRegistersTableInfo.foreignKeys.find((fk) => fk.name === 'FK_cash_registers_tenants')
+    ) {
+      await queryRunner.createForeignKey(
+        cashRegistersTable,
+        new TableForeignKey({
+          name: 'FK_cash_registers_tenants',
+          columnNames: ['tenantId'],
+          referencedTableName: 'cliente_petiscaria_tenants',
+          referencedColumnNames: ['id'],
+          onDelete: 'CASCADE',
+          onUpdate: 'NO ACTION',
+        }),
+      );
+    }
 
-    // Tornar tenantId NOT NULL após backfill
-    await queryRunner.query(`
-      ALTER TABLE cliente_petiscaria_cash_registers
-      MODIFY COLUMN tenantId char(36) NOT NULL
-    `);
+    if (
+      cashMovementsTableInfo &&
+      !cashMovementsTableInfo.foreignKeys.find((fk) => fk.name === 'FK_cash_movements_tenants')
+    ) {
+      await queryRunner.createForeignKey(
+        cashMovementsTable,
+        new TableForeignKey({
+          name: 'FK_cash_movements_tenants',
+          columnNames: ['tenantId'],
+          referencedTableName: 'cliente_petiscaria_tenants',
+          referencedColumnNames: ['id'],
+          onDelete: 'CASCADE',
+          onUpdate: 'NO ACTION',
+        }),
+      );
+    }
 
-    await queryRunner.query(`
-      ALTER TABLE cliente_petiscaria_cash_movements
-      MODIFY COLUMN tenantId char(36) NOT NULL
-    `);
+    await queryRunner.query(`ALTER TABLE ${cashRegistersTable} MODIFY COLUMN tenantId char(36) NOT NULL`);
+    await queryRunner.query(`ALTER TABLE ${cashMovementsTable} MODIFY COLUMN tenantId char(36) NOT NULL`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE cliente_petiscaria_cash_movements DROP FOREIGN KEY FK_cash_movements_tenants`);
-    await queryRunner.query(`ALTER TABLE cliente_petiscaria_cash_registers DROP FOREIGN KEY FK_cash_registers_tenants`);
+    const cashRegistersTable = 'cliente_petiscaria_cash_registers';
+    const cashMovementsTable = 'cliente_petiscaria_cash_movements';
 
-    await queryRunner.query(`ALTER TABLE cliente_petiscaria_cash_movements DROP COLUMN tenantId`);
-    await queryRunner.query(`ALTER TABLE cliente_petiscaria_cash_registers DROP COLUMN tenantId`);
+    await queryRunner.query(`ALTER TABLE ${cashMovementsTable} DROP FOREIGN KEY FK_cahr_movements_tenants`);
+    await queryRunner.query(`ALTER TABLE ${cashRegistersTable} DROP FOREIGN KEY FK_cash_registers_tenants`);
+
+    await queryRunner.query(`ALTER TABLE ${cashMovementsTable} DROP COLUMN tenantId`);
+    await queryRunner.query(`ALTER TABLE ${cashRegistersTable} DROP COLUMN tenantId`);
   }
 }
-
